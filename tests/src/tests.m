@@ -13,13 +13,21 @@ typedef TEST_SIG(function);
 
 #include "area.c"
 #include "space_gesture.c"
+#include "window_ordered.c"
 
 #define TEST_ENTRY(name) { #name, test_##name },
 #define TEST_LIST                                              \
     TEST_ENTRY(display_area_is_in_direction)                   \
-    TEST_ENTRY(closest_display_in_direction)                    \
-    TEST_ENTRY(space_gesture_encoding)                          \
-    TEST_ENTRY(space_gesture_invalid_request)
+    TEST_ENTRY(closest_display_in_direction)                   \
+    TEST_ENTRY(space_gesture_encoding)                         \
+    TEST_ENTRY(space_gesture_invalid_request)                  \
+    TEST_ENTRY(window_ordered_out_leaves_the_tree)             \
+    TEST_ENTRY(window_ordered_out_stays_unmanaged)             \
+    TEST_ENTRY(window_ordered_in_is_tiled_again)               \
+    TEST_ENTRY(window_ordered_in_keeps_float)                  \
+    TEST_ENTRY(window_reordered_stays_tiled)                   \
+    TEST_ENTRY(window_visible_event_while_still_ordered_out)   \
+    TEST_ENTRY(macos_version_newer_than_listed)
 
 static struct {
     char *name;
