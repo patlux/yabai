@@ -188,6 +188,13 @@ static EVENT_HANDLER(APPLICATION_LAUNCHED)
 
     int window_count;
     struct window **window_list = window_manager_add_application_windows(&g_space_manager, &g_window_manager, application, &window_count);
+
+    //
+    // NOTE: The AX API only returns windows on visible spaces. An application that restores its windows on
+    // an inactive space while launching (e.g. relaunch after an update) would otherwise never have them tracked.
+    //
+
+    window_manager_add_existing_application_windows(&g_space_manager, &g_window_manager, application, -1);
     uint32_t prev_window_id = g_window_manager.focused_window_id;
 
     uint64_t sid;
