@@ -1031,6 +1031,38 @@ void window_manager_add_lost_focused_event(struct window_manager *wm, uint32_t w
     table_add(&wm->window_lost_focused_event, &window_id, (void *)(intptr_t) 1);
 }
 
+//
+// NOTE(idvorkin): yabai learns of a new window only from kAXCreatedNotification. When that notification never
+// arrives (a Google Chat web app window on macOS 27), the window is never tracked: it covers the tiles until yabai
+// restarts, which is when it is found. Its application still reports it as the focused window once it is clicked,
+// so treat that as the creation we missed. A real creation still in the queue is harmless: WINDOW_CREATED ignores a
+// window it already tracks.
+//
+
+bool window_manager_adopt_missed_window(struct window_manager *wm, uint32_t window_id)
+{
+    int connection = 0;
+    pid_t pid = 0;
+    SLSGetWindowOwner(g_connection, window_id, &connection);
+    SLSConnectionGetPID(connection, &pid);
+
+    struct application *application = window_manager_find_application(wm, pid);
+    if (!application) return false;
+
+    CFTypeRef window_ref = NULL;
+    AXUIElementCopyAttributeValue(application->ref, kAXFocusedWindowAttribute, &window_ref);
+    if (!window_ref) return false;
+
+    if (ax_window_id(window_ref) != window_id) {
+        CFRelease(window_ref);
+        return false;
+    }
+
+    debug("%s: %s %d\n", __FUNCTION__, application->name, window_id);
+    event_loop_post(&g_event_loop, WINDOW_CREATED, (void *) window_ref, 0);
+    return true;
+}
+
 struct window *window_manager_find_window(struct window_manager *wm, uint32_t window_id)
 {
     return table_find(&wm->window, &window_id);

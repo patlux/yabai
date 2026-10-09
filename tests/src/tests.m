@@ -13,6 +13,7 @@ typedef TEST_SIG(function);
 #include "window_removal.c"
 #include "mouse_feedback.c"
 #include "window_ref.c"
+#include "window_adopt.c"
 
 #define TEST_ENTRY(name) { #name, test_##name },
 #define TEST_LIST                                              \
@@ -38,7 +39,8 @@ typedef TEST_SIG(function);
     TEST_ENTRY(mouse_up_with_invalid_window_clears_feedback)    \
     TEST_ENTRY(mouse_drag_with_invalid_window_clears_feedback)  \
     TEST_ENTRY(window_removal_forgets_feedback_node)           \
-    TEST_ENTRY(window_ref_kept_when_the_application_has_no_such_window)
+    TEST_ENTRY(window_ref_kept_when_the_application_has_no_such_window) \
+    TEST_ENTRY(window_adopt_skips_a_window_no_application_owns)
 
 static struct {
     char *name;
