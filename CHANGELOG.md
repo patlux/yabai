@@ -5,7 +5,15 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Removed
+- This fork targets systems with System Integrity Protection enabled and no longer includes the scripting addition (*--load-sa*, *--uninstall-sa*)
+- Removed features that only worked through the scripting addition: window animations (*window_animation_duration*, *window_animation_easing*), window opacity (*window_opacity*, *window_opacity_duration*, *active_window_opacity*, *normal_window_opacity*, *window --opacity*, rule *opacity*), window shadows (*window_shadow*, *window --toggle shadow*), sub-layers and z-ordering (*window --sub-layer*, *--raise*, *--lower*, rule *sub-layer*), *window --toggle sticky*, *window --toggle pip*, rule *sticky*, scratchpads (*window --scratchpad*, *window --toggle <LABEL>*, rule *scratchpad*), *space --create*, *--destroy*, *--move*, *--display* and *display --space*
+- *space --swap* only swaps spaces on different displays; *space --switch* on the same display now behaves like *space --focus*
+
 ### Changed
+- Space focus works on macOS 27 with System Integrity Protection enabled [#2822](https://github.com/asmvik/yabai/issues/2822)
+- macOS releases newer than the newest supported one use its code paths [#2828](https://github.com/asmvik/yabai/issues/2828)
+- Windows that an application orders out on close are no longer kept in the layout [#2828](https://github.com/asmvik/yabai/issues/2828)
 - Run the mouse event tap on its own thread so clicks are no longer held or dropped while the main thread is blocked in an Accessibility request [#2829](https://github.com/asmvik/yabai/issues/2829)
 - Fixed scripting-addition *add_space* pattern for macOS 26.6 Apple Silicon arm64 [#2799](https://github.com/asmvik/yabai/issues/2799)
 - Fixed minor memory leak on space destruction, and added a few missing null checks to SkyLight API calls [#2791](https://github.com/asmvik/yabai/issues/2791)
