@@ -173,10 +173,6 @@ Global Settings
     You should only enable this if you do NOT use the scripting addition. +
     The scripting addition implements the same functionality in a more robust way.
 
-*window_shadow* ['<BOOL_SEL>|float']::
-    Draw shadow for windows. +
-    System Integrity Protection must be partially disabled.
-
 *insert_feedback_color* ['0xAARRGGBB']::
     Color of the *window --insert* message and mouse_drag selection. +
     The purpose is to provide a visual preview of the new window frame.
@@ -390,9 +386,9 @@ COMMAND
     If type is 'rel' the split ratio of the selected window is changed by 'dr', otherwise 'dr' will become the new split ratio. +
     A positive/negative delta will increase/decrease the size of the left-child.
 
-*--toggle* 'float|sticky|pip|shadow|split|zoom-parent|zoom-fullscreen|windowed-fullscreen|native-fullscreen|expose|<LABEL>'::
+*--toggle* 'float|sticky|pip|split|zoom-parent|zoom-fullscreen|windowed-fullscreen|native-fullscreen|expose|<LABEL>'::
     Toggle the given property of the selected window. +
-    The following properties require System Integrity Protection to be partially disabled: sticky, pip, shadow, LABEL (scratchpad identifier) .
+    The following properties require System Integrity Protection to be partially disabled: sticky, pip, LABEL (scratchpad identifier) .
 
 *--sub-layer* '<LAYER>'::
     Set the stacking sub-layer of the selected window. +

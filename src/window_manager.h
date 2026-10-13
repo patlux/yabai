@@ -23,20 +23,6 @@ enum window_op_error
     WINDOW_OP_ERROR_SAME_STACK,
 };
 
-enum purify_mode
-{
-    PURIFY_DISABLED,
-    PURIFY_MANAGED,
-    PURIFY_ALWAYS
-};
-
-static const char *purify_mode_str[] =
-{
-    "on",
-    "float",
-    "off"
-};
-
 enum ffm_mode
 {
     FFM_DISABLED,
@@ -87,7 +73,6 @@ struct window_manager
     uint32_t last_window_id;
     bool enable_mff;
     enum ffm_mode ffm_mode;
-    enum purify_mode purify_mode;
     enum window_origin_mode window_origin_mode;
     float menubar_opacity;
     struct rgba_color insert_feedback_color;
@@ -163,7 +148,6 @@ struct window **window_manager_find_application_windows(struct window_manager *w
 enum window_op_error window_manager_move_window_relative(struct window_manager *wm, struct window *window, int type, float dx, float dy);
 void window_manager_resize_window_relative_internal(struct window *window, CGRect frame, int direction, float dx, float dy, bool animate);
 enum window_op_error window_manager_resize_window_relative(struct window_manager *wm, struct window *window, int direction, float dx, float dy, bool animate);
-void window_manager_set_purify_mode(struct window_manager *wm, enum purify_mode mode);
 void window_manager_set_menubar_opacity(struct window_manager *wm, float opacity);
 void window_manager_set_focus_follows_mouse(struct window_manager *wm, enum ffm_mode mode);
 enum window_op_error window_manager_set_window_insertion(struct space_manager *sm, struct window *window, int direction);
@@ -178,12 +162,10 @@ struct window *window_manager_create_and_add_window(struct space_manager *sm, st
 struct window **window_manager_add_application_windows(struct space_manager *sm, struct window_manager *wm, struct application *application, int *count);
 bool window_manager_add_existing_application_windows(struct space_manager *sm, struct window_manager *wm, struct application *application, int refresh_index);
 enum window_op_error window_manager_apply_grid(struct space_manager *sm, struct window_manager *wm, struct window *window, unsigned r, unsigned c, unsigned x, unsigned y, unsigned w, unsigned h);
-void window_manager_purify_window(struct window_manager *wm, struct window *window);
 void window_manager_make_window_floating(struct space_manager *sm, struct window_manager *wm, struct window *window, bool should_float, bool force);
 void window_manager_make_window_sticky(struct space_manager *sm, struct window_manager *wm, struct window *window, bool should_sticky);
 void window_manager_adjust_layer(struct window *window, int layer);
 bool window_manager_set_window_layer(struct window *window, int layer);
-void window_manager_toggle_window_shadow(struct window *window);
 void window_manager_toggle_window_zoom_parent(struct window_manager *wm, struct window *window);
 void window_manager_toggle_window_zoom_fullscreen(struct window_manager *wm, struct window *window);
 void window_manager_toggle_window_windowed_fullscreen(struct window *window);

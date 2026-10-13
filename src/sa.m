@@ -506,14 +506,6 @@ bool scripting_addition_set_sticky(uint32_t wid, bool sticky)
     return sa_payload_send(SA_OPCODE_WINDOW_STICKY);
 }
 
-bool scripting_addition_set_shadow(uint32_t wid, bool shadow)
-{
-    sa_payload_init();
-    pack(wid);
-    pack(shadow);
-    return sa_payload_send(SA_OPCODE_WINDOW_SHADOW);
-}
-
 bool scripting_addition_focus_window(uint32_t wid)
 {
     sa_payload_init();

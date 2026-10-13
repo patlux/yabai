@@ -503,7 +503,6 @@ static EVENT_HANDLER(APPLICATION_HIDDEN)
             window_manager_adjust_layer(window, LAYER_NORMAL);
             view_remove_window_node(view, window);
             window_manager_remove_managed_window(&g_window_manager, window->id);
-            window_manager_purify_window(&g_window_manager, window);
 
             view_set_flag(view, VIEW_IS_DIRTY);
             view_list[view_count++] = view;
@@ -767,7 +766,6 @@ static EVENT_HANDLER(WINDOW_RESIZED)
         if (view) {
             space_manager_untile_window(view, window);
             window_manager_remove_managed_window(&g_window_manager, window->id);
-            window_manager_purify_window(&g_window_manager, window);
         }
     } else if (was_fullscreen && !is_fullscreen) {
         window_manager_wait_for_native_fullscreen_transition(window);
@@ -847,7 +845,6 @@ static EVENT_HANDLER(WINDOW_MINIMIZED)
     if (view) {
         space_manager_untile_window(view, window);
         window_manager_remove_managed_window(&g_window_manager, window->id);
-        window_manager_purify_window(&g_window_manager, window);
     }
 
     event_signal_push(SIGNAL_WINDOW_MINIMIZED, window);

@@ -278,7 +278,6 @@ void window_manager_add_managed_window(struct window_manager *wm, struct window 
 {
     if (view->layout == VIEW_FLOAT) return;
     table_add(&wm->managed_window, &window->id, view);
-    window_manager_purify_window(wm, window);
 }
 
 void window_manager_window_did_order_out(struct window_manager *wm, struct window *window)
@@ -289,7 +288,6 @@ void window_manager_window_did_order_out(struct window_manager *wm, struct windo
     if (view) {
         space_manager_untile_window(view, window);
         window_manager_remove_managed_window(wm, window->id);
-        window_manager_purify_window(wm, window);
     }
 }
 
@@ -495,16 +493,6 @@ void window_manager_set_window_frame(struct window *window, float x, float y, fl
     });
 }
 
-void window_manager_set_purify_mode(struct window_manager *wm, enum purify_mode mode)
-{
-    wm->purify_mode = mode;
-    table_for (struct window *window, wm->window, {
-        if (window_manager_is_window_eligible(window)) {
-            window_manager_purify_window(wm, window);
-        }
-    })
-}
-
 void window_manager_set_menubar_opacity(struct window_manager *wm, float opacity)
 {
     wm->menubar_opacity = opacity;
@@ -566,27 +554,6 @@ bool window_manager_set_window_layer(struct window *window, int layer)
     CFRelease(window_list);
 
     return result;
-}
-
-void window_manager_purify_window(struct window_manager *wm, struct window *window)
-{
-    int value;
-
-    if (wm->purify_mode == PURIFY_DISABLED) {
-        value = 1;
-    } else if (wm->purify_mode == PURIFY_MANAGED) {
-        value = window_manager_find_managed_window(wm, window) ? 0 : 1;
-    } else /*if (wm->purify_mode == PURIFY_ALWAYS) */ {
-        value = 0;
-    }
-
-    if (scripting_addition_set_shadow(window->id, value)) {
-        if (value) {
-            window_set_flag(window, WINDOW_SHADOW);
-        } else {
-            window_clear_flag(window, WINDOW_SHADOW);
-        }
-    }
 }
 
 int window_manager_find_rank_of_window_in_list(uint32_t wid, uint32_t *window_list, int window_count)
@@ -1183,7 +1150,6 @@ struct window *window_manager_create_and_add_window(struct space_manager *sm, st
         if (window_manager_is_window_eligible(window)) {
             window->is_eligible = true;
             window_manager_apply_rules_to_window(sm, wm, window, window_title, window_role, window_subrole, one_shot_rules);
-            window_manager_purify_window(wm, window);
 
             if (application->is_hidden)                              goto out;
             if (window_check_flag(window, WINDOW_MINIMIZE))          goto out;
@@ -1502,7 +1468,6 @@ enum window_op_error window_manager_stack_window(struct space_manager *sm, struc
     if (b_view) {
         space_manager_untile_window(b_view, b);
         window_manager_remove_managed_window(wm, b->id);
-        window_manager_purify_window(wm, b);
     } else if (window_check_flag(b, WINDOW_FLOAT)) {
         if (!window_manager_is_window_eligible(b)) return WINDOW_OP_ERROR_INVALID_SRC_NODE;
         window_clear_flag(b, WINDOW_FLOAT);
@@ -1802,7 +1767,6 @@ void window_manager_send_window_to_space(struct space_manager *sm, struct window
     if (view) {
         space_manager_untile_window(view, window);
         window_manager_remove_managed_window(wm, window->id);
-        window_manager_purify_window(wm, window);
     }
 
     space_manager_move_window_to_space(dst_sid, window);
@@ -1890,7 +1854,6 @@ void window_manager_make_window_floating(struct space_manager *sm, struct window
         if (view) {
             space_manager_untile_window(view, window);
             window_manager_remove_managed_window(wm, window->id);
-            window_manager_purify_window(wm, window);
         }
         window_set_flag(window, WINDOW_FLOAT);
     } else {
@@ -1917,7 +1880,6 @@ void window_manager_make_window_sticky(struct space_manager *sm, struct window_m
             if (view) {
                 space_manager_untile_window(view, window);
                 window_manager_remove_managed_window(wm, window->id);
-                window_manager_purify_window(wm, window);
             }
             window_set_flag(window, WINDOW_STICKY);
         }
@@ -1931,20 +1893,6 @@ void window_manager_make_window_sticky(struct space_manager *sm, struct window_m
                     window_manager_add_managed_window(wm, window, view);
                 }
             }
-        }
-    }
-}
-
-void window_manager_toggle_window_shadow(struct window *window)
-{
-    TIME_FUNCTION;
-
-    bool shadow = !window_check_flag(window, WINDOW_SHADOW);
-    if (scripting_addition_set_shadow(window->id, shadow)) {
-        if (shadow) {
-            window_set_flag(window, WINDOW_SHADOW);
-        } else {
-            window_clear_flag(window, WINDOW_SHADOW);
         }
     }
 }
@@ -2262,7 +2210,6 @@ static void window_manager_validate_windows_on_space(struct window_manager *wm, 
             view_remove_window_node(view, window);
             window_manager_adjust_layer(window, LAYER_NORMAL);
             window_manager_remove_managed_window(wm, window->id);
-            window_manager_purify_window(wm, window);
 
             view_set_flag(view, VIEW_IS_DIRTY);
         }
@@ -2291,7 +2238,6 @@ static void window_manager_check_for_windows_on_space(struct window_manager *wm,
             view_remove_window_node(existing_view, window);
             window_manager_adjust_layer(window, LAYER_NORMAL);
             window_manager_remove_managed_window(wm, window->id);
-            window_manager_purify_window(wm, window);
             view_set_flag(existing_view, VIEW_IS_DIRTY);
         }
 
@@ -2400,7 +2346,6 @@ void window_manager_init(struct window_manager *wm)
     AXUIElementSetMessagingTimeout(wm->system_element, 1.0);
 
     wm->ffm_mode = FFM_DISABLED;
-    wm->purify_mode = PURIFY_DISABLED;
     wm->window_origin_mode = WINDOW_ORIGIN_DEFAULT;
     wm->enable_mff = false;
     wm->menubar_opacity = 1.0f;

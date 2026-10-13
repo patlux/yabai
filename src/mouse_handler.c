@@ -197,7 +197,6 @@ void mouse_drop_action_warp(struct window_manager *wm, struct view *src_view, st
 
     struct window_node *src_node_rm = view_remove_window_node(src_view, src_window);
     window_manager_remove_managed_window(wm, src_window->id);
-    window_manager_purify_window(wm, src_window);
 
     struct window_node *src_node_add = view_add_window_node_with_insertion_point(dst_view, src_window, dst_window->id);
     window_manager_add_managed_window(wm, src_window, dst_view);
@@ -222,7 +221,6 @@ void mouse_drop_no_target(struct space_manager *sm, struct window_manager *wm, s
     } else {
         space_manager_untile_window(src_view, window);
         window_manager_remove_managed_window(wm, window->id);
-        window_manager_purify_window(wm, window);
 
         struct view *view = space_manager_tile_window_on_space(sm, window, dst_view->sid);
         window_manager_add_managed_window(wm, window, view);

@@ -28,7 +28,6 @@ extern bool g_verbose;
 #define COMMAND_CONFIG_WINDOW_PLACEMENT      "window_placement"
 #define COMMAND_CONFIG_WINDOW_INSERT_POINT   "window_insertion_point"
 #define COMMAND_CONFIG_WINDOW_ZOOM_PERSIST   "window_zoom_persist"
-#define COMMAND_CONFIG_SHADOW                "window_shadow"
 #define COMMAND_CONFIG_MENUBAR_OPACITY       "menubar_opacity"
 #define COMMAND_CONFIG_INSERT_FEEDBACK_COLOR "insert_feedback_color"
 #define COMMAND_CONFIG_TOP_PADDING           "top_padding"
@@ -62,7 +61,6 @@ extern bool g_verbose;
 #define ARGUMENT_CONFIG_WINDOW_INSERT_FOCUSED "focused"
 #define ARGUMENT_CONFIG_WINDOW_INSERT_FIRST   "first"
 #define ARGUMENT_CONFIG_WINDOW_INSERT_LAST    "last"
-#define ARGUMENT_CONFIG_SHADOW_FLT            "float"
 #define ARGUMENT_CONFIG_LAYOUT_BSP            "bsp"
 #define ARGUMENT_CONFIG_LAYOUT_STACK          "stack"
 #define ARGUMENT_CONFIG_LAYOUT_FLOAT          "float"
@@ -160,7 +158,6 @@ extern bool g_verbose;
 #define ARGUMENT_WINDOW_LAYER_AUTO      "auto"
 #define ARGUMENT_WINDOW_TOGGLE_FLOAT    "float"
 #define ARGUMENT_WINDOW_TOGGLE_STICKY   "sticky"
-#define ARGUMENT_WINDOW_TOGGLE_SHADOW   "shadow"
 #define ARGUMENT_WINDOW_TOGGLE_SPLIT    "split"
 #define ARGUMENT_WINDOW_TOGGLE_PARENT   "zoom-parent"
 #define ARGUMENT_WINDOW_TOGGLE_FULLSC   "zoom-fullscreen"
@@ -532,7 +529,6 @@ static char *reserved_window_identifiers[] =
 {
     ARGUMENT_WINDOW_TOGGLE_FLOAT,
     ARGUMENT_WINDOW_TOGGLE_STICKY,
-    ARGUMENT_WINDOW_TOGGLE_SHADOW,
     ARGUMENT_WINDOW_TOGGLE_SPLIT,
     ARGUMENT_WINDOW_TOGGLE_PARENT,
     ARGUMENT_WINDOW_TOGGLE_FULLSC,
@@ -1263,19 +1259,6 @@ static void handle_domain_config(FILE *rsp, struct token domain, char *message)
                 g_space_manager.skip_window_focus_animation = false;
             } else if (token_equals(value, ARGUMENT_COMMON_VAL_ON)) {
                 g_space_manager.skip_window_focus_animation = true;
-            } else {
-                daemon_fail(rsp, "unknown value '%.*s' given to command '%.*s' for domain '%.*s'\n", value.length, value.text, command.length, command.text, domain.length, domain.text);
-            }
-        } else if (token_equals(command, COMMAND_CONFIG_SHADOW)) {
-            struct token value = get_token(&message);
-            if (!token_is_valid(value)) {
-                fprintf(rsp, "%s\n", purify_mode_str[g_window_manager.purify_mode]);
-            } else if (token_equals(value, ARGUMENT_COMMON_VAL_OFF)) {
-                window_manager_set_purify_mode(&g_window_manager, PURIFY_ALWAYS);
-            } else if (token_equals(value, ARGUMENT_CONFIG_SHADOW_FLT)) {
-                window_manager_set_purify_mode(&g_window_manager, PURIFY_MANAGED);
-            } else if (token_equals(value, ARGUMENT_COMMON_VAL_ON)) {
-                window_manager_set_purify_mode(&g_window_manager, PURIFY_DISABLED);
             } else {
                 daemon_fail(rsp, "unknown value '%.*s' given to command '%.*s' for domain '%.*s'\n", value.length, value.text, command.length, command.text, domain.length, domain.text);
             }
@@ -2201,12 +2184,6 @@ static void handle_domain_window(FILE *rsp, struct token domain, char *message)
             } else if (token_equals(value, ARGUMENT_WINDOW_TOGGLE_STICKY)) {
                 if (acting_window) {
                     window_manager_make_window_sticky(&g_space_manager, &g_window_manager, acting_window, !window_check_flag(acting_window, WINDOW_STICKY));
-                } else {
-                    daemon_fail(rsp, "could not locate the window to act on!\n");
-                }
-            } else if (token_equals(value, ARGUMENT_WINDOW_TOGGLE_SHADOW)) {
-                if (acting_window) {
-                    window_manager_toggle_window_shadow(acting_window);
                 } else {
                     daemon_fail(rsp, "could not locate the window to act on!\n");
                 }
