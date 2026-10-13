@@ -1259,12 +1259,22 @@ bool window_manager_add_existing_application_windows(struct space_manager *sm, s
 
                     memcpy(data+0xc, &element_id, sizeof(uint64_t));
                     AXUIElementRef element_ref = _AXUIElementCreateWithRemoteToken(data_ref);
+                    if (!element_ref) continue;
 
                     const void *role = NULL;
                     AXUIElementCopyAttributeValue(element_ref, kAXRoleAttribute, &role);
 
-                    if (role) {
-                        if (CFEqual(role, kAXWindowRole)) {
+                    //
+                    // NOTE: Most probed ids belong to no element or to a non-window element. Release those
+                    // references too; only a matched window takes ownership of its element reference.
+                    //
+
+                    if (!role) {
+                        CFRelease(element_ref);
+                    } else {
+                        if (!CFEqual(role, kAXWindowRole)) {
+                            CFRelease(element_ref);
+                        } else {
                             uint32_t element_wid = ax_window_id(element_ref);
                             bool matched = false;
 
