@@ -58,10 +58,7 @@
 #undef HASHTABLE_IMPLEMENTATION
 #include "misc/service.h"
 
-#include "osax/common.h"
-
 #include "view.h"
-#include "sa.h"
 #include "event_loop.h"
 #include "event_signal.h"
 #include "workspace.h"
@@ -78,7 +75,6 @@
 #include "window_manager.h"
 #include "mouse_handler.h"
 
-#include "sa.m"
 #include "mission_control.c"
 #include "event_loop.c"
 #include "event_signal.c"

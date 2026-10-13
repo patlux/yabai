@@ -912,13 +912,9 @@ void window_manager_focus_window_with_raise(ProcessSerialNumber *window_psn, uin
 {
     TIME_FUNCTION;
 
-#if 1
     _SLPSSetFrontProcessWithOptions(window_psn, window_id, kCPSUserGenerated);
     window_manager_make_key_window(window_psn, window_id);
     AXUIElementPerformAction(window_ref, kAXRaiseAction);
-#else
-    scripting_addition_focus_window(window_id);
-#endif
 }
 
 #pragma clang diagnostic push

@@ -1,9 +1,6 @@
-#define SA_SOCKET_PATH_FMT      "/tmp/yabai-sa_%s.socket"
 #define SOCKET_PATH_FMT         "/tmp/yabai_%s.socket"
 #define LCFILE_PATH_FMT         "/tmp/yabai_%s.lock"
 
-#define SCRPT_ADD_LOAD_OPT      "--load-sa"
-#define SCRPT_ADD_UNINSTALL_OPT "--uninstall-sa"
 #define SERVICE_INSTALL_OPT     "--install-service"
 #define SERVICE_UNINSTALL_OPT   "--uninstall-service"
 #define SERVICE_START_OPT       "--start-service"
@@ -40,7 +37,6 @@ int g_layer_below_window_level;
 int g_layer_above_window_level;
 uint8_t *g_event_bytes;
 
-char g_sa_socket_file[MAXLEN];
 char g_socket_file[MAXLEN];
 char g_config_file[4096];
 char g_lock_file[MAXLEN];
@@ -130,7 +126,6 @@ static inline bool configure_settings_and_acquire_lock(void)
         error("yabai: 'env USER' not set! abort..\n");
     }
 
-    snprintf(g_sa_socket_file, sizeof(g_sa_socket_file), SA_SOCKET_PATH_FMT, user);
     snprintf(g_socket_file, sizeof(g_socket_file), SOCKET_PATH_FMT, user);
     snprintf(g_lock_file, sizeof(g_lock_file), LCFILE_PATH_FMT, user);
 
@@ -180,8 +175,6 @@ static void parse_arguments(int argc, char **argv)
         (string_equals(argv[1], HELP_OPT_SHRT))) {
         fprintf(stdout, "Usage: yabai [option]\n"
                         "Options:\n"
-                        "    --load-sa              Install and load the scripting-addition.\n"
-                        "    --uninstall-sa         Uninstall the scripting-addition.\n"
                         "    --install-service      Write launchd service file to disk.\n"
                         "    --uninstall-service    Remove launchd service file from disk.\n"
                         "    --start-service        Enable, load, and start the launchd service.\n"
@@ -206,14 +199,6 @@ static void parse_arguments(int argc, char **argv)
     if ((string_equals(argv[1], CLIENT_OPT_LONG)) ||
         (string_equals(argv[1], CLIENT_OPT_SHRT))) {
         exit(client_send_message(argc-1, argv+1));
-    }
-
-    if (string_equals(argv[1], SCRPT_ADD_UNINSTALL_OPT)) {
-        exit(scripting_addition_uninstall());
-    }
-
-    if (string_equals(argv[1], SCRPT_ADD_LOAD_OPT)) {
-        exit(scripting_addition_load());
     }
 
     if (string_equals(argv[1], SERVICE_INSTALL_OPT)) {

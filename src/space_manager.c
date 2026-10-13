@@ -674,7 +674,7 @@ void space_manager_move_window_list_to_space(uint64_t sid, uint32_t *window_list
         CFArrayRef window_list_ref = cfarray_of_cfnumbers(window_list, sizeof(uint32_t), window_count, kCFNumberSInt32Type);
         SLSMoveWindowsToManagedSpace(g_connection, window_list_ref, sid);
         CFRelease(window_list_ref);
-    } else if (!scripting_addition_move_window_list_to_space(sid, window_list, window_count)) {
+    } else {
         SLSSpaceSetCompatID(g_connection, sid, 0x79616265);
         SLSSetWindowListWorkspace(g_connection, window_list, window_count, 0x79616265);
         SLSSpaceSetCompatID(g_connection, sid, 0x0);
@@ -695,7 +695,7 @@ void space_manager_move_window_to_space(uint64_t sid, struct window *window)
         CFArrayRef window_list_ref = cfarray_of_cfnumbers(&window->id, sizeof(uint32_t), 1, kCFNumberSInt32Type);
         SLSMoveWindowsToManagedSpace(g_connection, window_list_ref, sid);
         CFRelease(window_list_ref);
-    } else if (!scripting_addition_move_window_to_space(sid, window->id)) {
+    } else {
         SLSSpaceSetCompatID(g_connection, sid, 0x79616265);
         SLSSetWindowListWorkspace(g_connection, &window->id, 1, 0x79616265);
         SLSSpaceSetCompatID(g_connection, sid, 0x0);
@@ -842,20 +842,12 @@ enum space_op_error space_manager_focus_space(uint64_t sid)
     uint64_t cur_sid = space_manager_active_space();
     if (cur_sid == sid) return SPACE_OP_ERROR_SAME_SPACE;
 
-    uint32_t cur_did = space_display_id(cur_sid);
     uint32_t new_did = space_display_id(sid);
-    bool focus_display = cur_did != new_did;
 
     bool is_animating = display_manager_display_is_animating(new_did);
     if (is_animating) return SPACE_OP_ERROR_DISPLAY_IS_ANIMATING;
 
-    if (scripting_addition_focus_space(sid)) {
-        if (focus_display) {
-            display_manager_focus_display(new_did, sid);
-        }
-    } else {
-        if (!space_manager_focus_space_using_gesture(new_did, sid)) return SPACE_OP_ERROR_GESTURE;
-    }
+    if (!space_manager_focus_space_using_gesture(new_did, sid)) return SPACE_OP_ERROR_GESTURE;
 
     return SPACE_OP_ERROR_SUCCESS;
 }

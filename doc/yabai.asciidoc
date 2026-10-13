@@ -23,7 +23,7 @@ yabai - window manager
 Synopsis
 --------
 
-*yabai* [*--load-sa*|*--uninstall-sa*|*--install-service*|*--uninstall-service*|*--start-service*|*--restart-service*|*--stop-service*|*--message*,*-m* 'msg'|*--config*,*-c* 'config_file'|*--verbose*,*-V*|*--version*,*-v*|*--help*,*-h*]
+*yabai* [*--install-service*|*--uninstall-service*|*--start-service*|*--restart-service*|*--stop-service*|*--message*,*-m* 'msg'|*--config*,*-c* 'config_file'|*--verbose*,*-V*|*--version*,*-v*|*--help*,*-h*]
 
 Description
 -----------
@@ -32,17 +32,6 @@ Description
 
 Options
 -------
-*--load-sa*::
-    Load the scripting-addition into Dock.app. +
-    Installs and updates the scripting-addition when necessary. +
-    Path is /Library/ScriptingAdditions/yabai.osax. +
-    System Integrity Protection must be partially disabled.
-
-*--uninstall-sa*::
-    Uninstall the scripting-addition. Must be run as root. +
-    Path is /Library/ScriptingAdditions/yabai.osax. +
-    System Integrity Protection must be partially disabled.
-
 *--install-service*::
     Writes a launchd service file to disk. +
     Path is ~/Library/LaunchAgents/com.asmvik.yabai.plist.
@@ -167,9 +156,7 @@ Global Settings
     Windows will keep their zoom-state through layout changes.
 
 *skip_window_focus_animation* ['<BOOL_SEL>']::
-    Bypass macOS space animation when an application or window on an inactive space is focused. +
-    You should only enable this if you do NOT use the scripting addition. +
-    The scripting addition implements the same functionality in a more robust way.
+    Bypass macOS space animation when an application or window on an inactive space is focused.
 
 *insert_feedback_color* ['0xAARRGGBB']::
     Color of the *window --insert* message and mouse_drag selection. +

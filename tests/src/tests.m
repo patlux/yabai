@@ -1,8 +1,3 @@
-unsigned char __src_osax_payload[1];
-unsigned int __src_osax_payload_len;
-unsigned char __src_osax_loader[1];
-unsigned int __src_osax_loader_len;
-
 #include "../../src/manifest.m"
 
 #define TEST_SIG(name) bool test_##name(void)
