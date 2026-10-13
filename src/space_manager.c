@@ -747,10 +747,6 @@ static enum space_op_error space_manager_swap_space_with_space_on_display(uint32
     if (display_manager_display_is_animating(a_did)) return SPACE_OP_ERROR_DISPLAY_IS_ANIMATING;
     if (display_manager_display_is_animating(b_did)) return SPACE_OP_ERROR_DISPLAY_IS_ANIMATING;
 
-    float window_animation_duration = g_window_manager.window_animation_duration;
-    g_window_manager.window_animation_duration = 0.0f;
-    __asm__ __volatile__ ("" ::: "memory");
-
     int a_window_list_count = 0;
     uint32_t *a_window_list = space_window_list(a_sid, &a_window_list_count, true);
 
@@ -793,8 +789,6 @@ static enum space_op_error space_manager_swap_space_with_space_on_display(uint32
     view_flush(a_view);
     view_flush(b_view);
 
-    __asm__ __volatile__ ("" ::: "memory");
-    g_window_manager.window_animation_duration = window_animation_duration;
     return SPACE_OP_ERROR_SUCCESS;
 }
 

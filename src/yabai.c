@@ -35,7 +35,6 @@ struct event_loop g_event_loop;
 void *g_workspace_context;
 
 enum mission_control_mode g_mission_control_mode;
-double g_cv_host_clock_frequency;
 int g_layer_normal_window_level;
 int g_layer_below_window_level;
 int g_layer_above_window_level;
@@ -46,7 +45,6 @@ char g_socket_file[MAXLEN];
 char g_config_file[4096];
 char g_lock_file[MAXLEN];
 
-mach_port_t g_bs_port;
 int g_connection;
 bool g_verbose;
 pid_t g_pid;
@@ -141,7 +139,6 @@ static inline bool configure_settings_and_acquire_lock(void)
     g_event_bytes = malloc(0x100);
     memset(g_event_bytes, 0, 0x100);
     g_connection = SLSMainConnectionID();
-    g_cv_host_clock_frequency   = CVGetHostClockFrequency();
     g_layer_normal_window_level = CGWindowLevelForKey(LAYER_NORMAL);
     g_layer_below_window_level  = CGWindowLevelForKey(LAYER_BELOW);
     g_layer_above_window_level  = CGWindowLevelForKey(LAYER_ABOVE);
@@ -153,7 +150,6 @@ static inline bool configure_settings_and_acquire_lock(void)
     CGSetLocalEventsSuppressionInterval(0.0f);
     CGEnableEventStateCombining(false);
     mouse_state_init(&g_mouse_state);
-    task_get_special_port(mach_task_self(), TASK_BOOTSTRAP_PORT, &g_bs_port);
 
 #if 0
     hook_nsobject_autorelease();

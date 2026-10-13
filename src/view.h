@@ -54,37 +54,6 @@ struct window_capture
     float x, y, w, h;
 };
 
-struct window_proxy
-{
-    uint32_t id;
-    CGContextRef context;
-    float tx, ty, tw, th;
-    CGRect frame;
-    int level;
-    int sub_level;
-    CGImageRef image;
-};
-
-struct window_animation
-{
-    struct window *window;
-    uint32_t wid;
-    float x, y, w, h;
-    int cid;
-    struct window_proxy proxy;
-    volatile bool skip;
-};
-
-struct window_animation_context
-{
-    int animation_connection;
-    int animation_easing;
-    float animation_duration;
-    uint64_t animation_clock;
-    struct window_animation *animation_list;
-    int animation_count;
-};
-
 struct balance_node
 {
     int y_count;
