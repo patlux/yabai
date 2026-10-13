@@ -13,24 +13,45 @@ volatile bool __pending_gesture;
 volatile uint64_t __last_gesture_time;
 volatile uint64_t __last_cmd_tab_time;
 
-static void update_window_notifications(void)
+// NOTE: Sized from the tables instead of a fixed stack array, which overflowed with more than 1024 tracked windows.
+// The caller frees the list; this runs on several threads, so it cannot use the event loop's temporary storage.
+static uint32_t *window_notification_list(int *window_count)
 {
-    int window_count = 0;
-    uint32_t window_list[1024] = {0};
+    *window_count = 0;
 
     if (workspace_is_macos_sequoia() || workspace_is_macos_tahoe()) {
         // NOTE(asmvik): Subscribe to all windows because of window_destroyed (and ordered) notifications
+        int capacity = g_window_manager.window.count;
+        uint32_t *window_list = malloc(sizeof(uint32_t) * (capacity ? capacity : 1));
+        if (!window_list) return NULL;
+
         table_for (struct window *window, g_window_manager.window, {
-            window_list[window_count++] = window->id;
+            if (*window_count < capacity) window_list[(*window_count)++] = window->id;
         })
+
+        return window_list;
     } else {
         // NOTE(asmvik): Subscribe to windows that have a feedback_border because of window_ordered notifications
+        int capacity = g_window_manager.insert_feedback.count;
+        uint32_t *window_list = malloc(sizeof(uint32_t) * (capacity ? capacity : 1));
+        if (!window_list) return NULL;
+
         table_for (struct window_node *node, g_window_manager.insert_feedback, {
-            window_list[window_count++] = node->window_order[0];
+            if (*window_count < capacity) window_list[(*window_count)++] = node->window_order[0];
         })
+
+        return window_list;
     }
+}
+
+static void update_window_notifications(void)
+{
+    int window_count;
+    uint32_t *window_list = window_notification_list(&window_count);
+    if (!window_list) return;
 
     SLSRequestNotificationsForWindows(g_connection, window_list, window_count);
+    free(window_list);
 }
 
 static void window_did_receive_focus(struct window_manager *wm, struct mouse_state *ms, struct window *window)

@@ -9,6 +9,7 @@ typedef TEST_SIG(function);
 #include "area.c"
 #include "space_gesture.c"
 #include "window_ordered.c"
+#include "window_notifications.c"
 
 #define TEST_ENTRY(name) { #name, test_##name },
 #define TEST_LIST                                              \
@@ -22,7 +23,8 @@ typedef TEST_SIG(function);
     TEST_ENTRY(window_ordered_in_keeps_float)                  \
     TEST_ENTRY(window_reordered_stays_tiled)                   \
     TEST_ENTRY(window_visible_event_while_still_ordered_out)   \
-    TEST_ENTRY(macos_version_newer_than_listed)
+    TEST_ENTRY(macos_version_newer_than_listed)                \
+    TEST_ENTRY(window_notification_list_includes_every_tracked_window)
 
 static struct {
     char *name;
