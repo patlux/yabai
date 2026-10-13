@@ -28,12 +28,8 @@ extern bool g_verbose;
 #define COMMAND_CONFIG_WINDOW_PLACEMENT      "window_placement"
 #define COMMAND_CONFIG_WINDOW_INSERT_POINT   "window_insertion_point"
 #define COMMAND_CONFIG_WINDOW_ZOOM_PERSIST   "window_zoom_persist"
-#define COMMAND_CONFIG_OPACITY               "window_opacity"
-#define COMMAND_CONFIG_OPACITY_DURATION      "window_opacity_duration"
 #define COMMAND_CONFIG_SHADOW                "window_shadow"
 #define COMMAND_CONFIG_MENUBAR_OPACITY       "menubar_opacity"
-#define COMMAND_CONFIG_ACTIVE_WINDOW_OPACITY "active_window_opacity"
-#define COMMAND_CONFIG_NORMAL_WINDOW_OPACITY "normal_window_opacity"
 #define COMMAND_CONFIG_INSERT_FEEDBACK_COLOR "insert_feedback_color"
 #define COMMAND_CONFIG_TOP_PADDING           "top_padding"
 #define COMMAND_CONFIG_BOTTOM_PADDING        "bottom_padding"
@@ -141,7 +137,6 @@ extern bool g_verbose;
 #define COMMAND_WINDOW_RESIZE     "--resize"
 #define COMMAND_WINDOW_RATIO      "--ratio"
 #define COMMAND_WINDOW_SUB_LAYER  "--sub-layer"
-#define COMMAND_WINDOW_OPACITY    "--opacity"
 #define COMMAND_WINDOW_RAISE      "--raise"
 #define COMMAND_WINDOW_LOWER      "--lower"
 #define COMMAND_WINDOW_TOGGLE     "--toggle"
@@ -200,7 +195,6 @@ extern bool g_verbose;
 #define ARGUMENT_RULE_KEY_SUBROLE    "subrole"
 #define ARGUMENT_RULE_KEY_DISPLAY    "display"
 #define ARGUMENT_RULE_KEY_SPACE      "space"
-#define ARGUMENT_RULE_KEY_OPACITY    "opacity"
 #define ARGUMENT_RULE_KEY_MANAGE     "manage"
 #define ARGUMENT_RULE_KEY_STICKY     "sticky"
 #define ARGUMENT_RULE_KEY_MFF        "mouse_follows_focus"
@@ -1272,26 +1266,6 @@ static void handle_domain_config(FILE *rsp, struct token domain, char *message)
             } else {
                 daemon_fail(rsp, "unknown value '%.*s' given to command '%.*s' for domain '%.*s'\n", value.length, value.text, command.length, command.text, domain.length, domain.text);
             }
-        } else if (token_equals(command, COMMAND_CONFIG_OPACITY)) {
-            struct token value = get_token(&message);
-            if (!token_is_valid(value)) {
-                fprintf(rsp, "%s\n", bool_str[g_window_manager.enable_window_opacity]);
-            } else if (token_equals(value, ARGUMENT_COMMON_VAL_OFF)) {
-                window_manager_set_window_opacity_enabled(&g_window_manager, false);
-            } else if (token_equals(value, ARGUMENT_COMMON_VAL_ON)) {
-                window_manager_set_window_opacity_enabled(&g_window_manager, true);
-            } else {
-                daemon_fail(rsp, "unknown value '%.*s' given to command '%.*s' for domain '%.*s'\n", value.length, value.text, command.length, command.text, domain.length, domain.text);
-            }
-        } else if (token_equals(command, COMMAND_CONFIG_OPACITY_DURATION)) {
-            struct token_value value = token_to_value(get_token(&message));
-            if (value.type == TOKEN_TYPE_INVALID) {
-                fprintf(rsp, "%f\n", g_window_manager.window_opacity_duration);
-            } else if (value.type == TOKEN_TYPE_FLOAT) {
-                g_window_manager.window_opacity_duration = value.float_value;
-            } else {
-                daemon_fail(rsp, "unknown value '%.*s' given to command '%.*s' for domain '%.*s'\n", value.token.length, value.token.text, command.length, command.text, domain.length, domain.text);
-            }
         } else if (token_equals(command, COMMAND_CONFIG_SHADOW)) {
             struct token value = get_token(&message);
             if (!token_is_valid(value)) {
@@ -1311,24 +1285,6 @@ static void handle_domain_config(FILE *rsp, struct token domain, char *message)
                 fprintf(rsp, "%.4f\n", g_window_manager.menubar_opacity);
             } else if (value.type == TOKEN_TYPE_FLOAT && in_range_ii(value.float_value, 0.0f, 1.0f)) {
                 window_manager_set_menubar_opacity(&g_window_manager, value.float_value);
-            } else {
-                daemon_fail(rsp, "unknown value '%.*s' given to command '%.*s' for domain '%.*s'\n", value.token.length, value.token.text, command.length, command.text, domain.length, domain.text);
-            }
-        } else if (token_equals(command, COMMAND_CONFIG_ACTIVE_WINDOW_OPACITY)) {
-            struct token_value value = token_to_value(get_token(&message));
-            if (value.type == TOKEN_TYPE_INVALID) {
-                fprintf(rsp, "%.4f\n", g_window_manager.active_window_opacity);
-            } else if (value.type == TOKEN_TYPE_FLOAT && in_range_ei(value.float_value, 0.0f, 1.0f)) {
-                window_manager_set_active_window_opacity(&g_window_manager, value.float_value);
-            } else {
-                daemon_fail(rsp, "unknown value '%.*s' given to command '%.*s' for domain '%.*s'\n", value.token.length, value.token.text, command.length, command.text, domain.length, domain.text);
-            }
-        } else if (token_equals(command, COMMAND_CONFIG_NORMAL_WINDOW_OPACITY)) {
-            struct token_value value = token_to_value(get_token(&message));
-            if (value.type == TOKEN_TYPE_INVALID) {
-                fprintf(rsp, "%.4f\n", g_window_manager.normal_window_opacity);
-            } else if (value.type == TOKEN_TYPE_FLOAT && in_range_ei(value.float_value, 0.0f, 1.0f)) {
-                window_manager_set_normal_window_opacity(&g_window_manager, value.float_value);
             } else {
                 daemon_fail(rsp, "unknown value '%.*s' given to command '%.*s' for domain '%.*s'\n", value.token.length, value.token.text, command.length, command.text, domain.length, domain.text);
             }
@@ -2320,17 +2276,6 @@ static void handle_domain_window(FILE *rsp, struct token domain, char *message)
             } else {
                 daemon_fail(rsp, "unknown value '%.*s' given to command '%.*s' for domain '%.*s'\n", value.length, value.text, command.length, command.text, domain.length, domain.text);
             }
-        } else if (token_equals(command, COMMAND_WINDOW_OPACITY)) {
-            struct token_value value = token_to_value(get_token(&message));
-            if (value.type == TOKEN_TYPE_FLOAT && in_range_ii(value.float_value, 0.0f, 1.0f)) {
-                if (window_manager_set_opacity(&g_window_manager, acting_window, value.float_value)) {
-                    acting_window->opacity = value.float_value;
-                } else {
-                    daemon_fail(rsp, "could not change opacity of window with id '%d' due to an error with the scripting-addition.\n", acting_window->id);
-                }
-            } else {
-                daemon_fail(rsp, "unknown value '%.*s' given to command '%.*s' for domain '%.*s'\n", value.token.length, value.token.text, command.length, command.text, domain.length, domain.text);
-            }
         } else if (token_equals(command, COMMAND_WINDOW_RAISE)) {
             struct selector selector = parse_window_selector(rsp, &message, acting_window, true);
             uint32_t selector_wid = 0;
@@ -2676,15 +2621,6 @@ static bool parse_rule(FILE *rsp, char **message, struct rule *rule, struct toke
                         &rule->effects.grid[0], &rule->effects.grid[1],
                         &rule->effects.grid[2], &rule->effects.grid[3],
                         &rule->effects.grid[4], &rule->effects.grid[5]) != 6)) {
-                daemon_fail(rsp, "invalid value '%s' for key '%s'\n", value, key);
-                did_parse = false;
-            }
-        } else if (string_equals(key, ARGUMENT_RULE_KEY_OPACITY)) {
-            if (exclusion) unsupported_exclusion = key;
-
-            if ((sscanf(value, "%f", &rule->effects.opacity) == 1) && (in_range_ii(rule->effects.opacity, 0.0f, 1.0f))) {
-                rule_effects_set_flag(&rule->effects, RULE_OPACITY);
-            } else {
                 daemon_fail(rsp, "invalid value '%s' for key '%s'\n", value, key);
                 did_parse = false;
             }

@@ -177,22 +177,6 @@ Global Settings
     Draw shadow for windows. +
     System Integrity Protection must be partially disabled.
 
-*window_opacity* ['<BOOL_SEL>']::
-    Enable opacity for windows. +
-    System Integrity Protection must be partially disabled.
-
-*window_opacity_duration* ['<FLOAT_SEL>']::
-    Duration of transition between active / normal opacity. +
-    System Integrity Protection must be partially disabled.
-
-*active_window_opacity* ['<FLOAT_SEL>']::
-    Opacity of the focused window. +
-    System Integrity Protection must be partially disabled.
-
-*normal_window_opacity* ['<FLOAT_SEL>']::
-    Opacity of an unfocused window. +
-    System Integrity Protection must be partially disabled.
-
 *insert_feedback_color* ['0xAARRGGBB']::
     Color of the *window --insert* message and mouse_drag selection. +
     The purpose is to provide a visual preview of the new window frame.
@@ -416,12 +400,6 @@ COMMAND
     Specify the value 'auto' to reset back to normal and make it become automatically managed. +
     System Integrity Protection must be partially disabled.
 
-*--opacity* '<FLOAT_SEL>'::
-    Set the opacity of the selected window. +
-    The window will no longer be eligible for automatic change in opacity upon focus change. +
-    Specify the value '0.0' to reset back to full opacity and make it become automatically managed. +
-    System Integrity Protection must be partially disabled.
-
 *--raise* ['<WINDOW_SEL>']::
     Orders the selected window above the given window, or to the front within its layer. +
     System Integrity Protection must be partially disabled.
@@ -591,7 +569,7 @@ Rule
 All rules that match the given filter will be applied in the order they were registered. +
 If multiple rules specify a value for the same property, the latter rule will end up overriding that value. +
 If the display and space properties are both set, the space property will take precedence. +
-The following properties require System Integrity Protection to be partially disabled: sticky, sub-layer, opacity, scratchpad.
+The following properties require System Integrity Protection to be partially disabled: sticky, sub-layer, scratchpad.
 
 General Syntax
 ^^^^^^^^^^^^^^
@@ -659,12 +637,6 @@ ARGUMENT
     Specify the value 'auto' to reset back to normal and make it become automatically managed. +
     System Integrity Protection must be partially disabled.
 
-*opacity='<FLOAT_SEL>'*::
-    Set window opacity. +
-    The window will no longer be eligible for automatic change in opacity upon focus change. +
-    Specify the value '0.0' to reset back to full opacity and make it become automatically managed. +
-    System Integrity Protection must be partially disabled.
-
 *native-fullscreen='<BOOL_SEL>'*::
     Window should enter native macOS fullscreen mode.
 
@@ -693,7 +665,6 @@ DATAFORMAT
     "display": number,
     "space": number,
     "follow_space": bool,
-    "opacity": number,
     "manage": bool (optional),
     "sticky": bool (optional),
     "mouse_follows_focus": bool (optional),

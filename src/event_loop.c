@@ -35,13 +35,6 @@ static void update_window_notifications(void)
 
 static void window_did_receive_focus(struct window_manager *wm, struct mouse_state *ms, struct window *window)
 {
-    struct window *focused_window = window_manager_find_window(wm, wm->focused_window_id);
-    if (focused_window && focused_window != window && window_space(focused_window->id) == window_space(window->id)) {
-        window_manager_set_window_opacity(wm, focused_window, g_window_manager.normal_window_opacity);
-    }
-
-    window_manager_set_window_opacity(wm, window, wm->active_window_opacity);
-
     if (wm->focused_window_id != window->id) {
         if (ms->ffm_window_id != window->id) {
             window_manager_center_mouse(wm, window);
@@ -394,11 +387,6 @@ static EVENT_HANDLER(APPLICATION_FRONT_SWITCHED)
 
     uint32_t application_focused_window_id = application_focused_window(application);
     if (!application_focused_window_id) {
-        struct window *focused_window = window_manager_find_window(&g_window_manager, g_window_manager.focused_window_id);
-        if (focused_window) {
-            window_manager_set_window_opacity(&g_window_manager, focused_window, g_window_manager.normal_window_opacity);
-        }
-
         g_window_manager.last_window_id = g_window_manager.focused_window_id;
         g_window_manager.focused_window_id = 0;
         g_window_manager.focused_window_psn = application->psn;
@@ -408,11 +396,6 @@ static EVENT_HANDLER(APPLICATION_FRONT_SWITCHED)
 
     struct window *window = window_manager_find_window(&g_window_manager, application_focused_window_id);
     if (!window) {
-        struct window *focused_window = window_manager_find_window(&g_window_manager, g_window_manager.focused_window_id);
-        if (focused_window) {
-            window_manager_set_window_opacity(&g_window_manager, focused_window, g_window_manager.normal_window_opacity);
-        }
-
         window_manager_add_lost_focused_event(&g_window_manager, application_focused_window_id);
         return;
     }
@@ -1649,7 +1632,6 @@ static EVENT_HANDLER(SYSTEM_WOKE)
 
     struct window *focused_window = window_manager_find_window(&g_window_manager, g_window_manager.focused_window_id);
     if (focused_window) {
-        window_manager_set_window_opacity(&g_window_manager, focused_window, g_window_manager.active_window_opacity);
         window_manager_center_mouse(&g_window_manager, focused_window);
     }
 

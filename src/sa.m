@@ -490,15 +490,6 @@ bool scripting_addition_move_window(uint32_t wid, int x, int y)
     return sa_payload_send(SA_OPCODE_WINDOW_MOVE);
 }
 
-bool scripting_addition_set_opacity(uint32_t wid, float opacity, float duration)
-{
-    sa_payload_init();
-    pack(wid);
-    pack(opacity);
-    pack(duration);
-    return sa_payload_send(duration > 0.0f ? SA_OPCODE_WINDOW_OPACITY_FADE : SA_OPCODE_WINDOW_OPACITY);
-}
-
 bool scripting_addition_set_layer(uint32_t wid, int layer)
 {
     sa_payload_init();

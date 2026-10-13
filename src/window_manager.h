@@ -89,11 +89,7 @@ struct window_manager
     enum ffm_mode ffm_mode;
     enum purify_mode purify_mode;
     enum window_origin_mode window_origin_mode;
-    bool enable_window_opacity;
     float menubar_opacity;
-    float active_window_opacity;
-    float normal_window_opacity;
-    float window_opacity_duration;
     struct rgba_color insert_feedback_color;
     struct scratchpad *scratchpad_window;
 };
@@ -169,11 +165,6 @@ void window_manager_resize_window_relative_internal(struct window *window, CGRec
 enum window_op_error window_manager_resize_window_relative(struct window_manager *wm, struct window *window, int direction, float dx, float dy, bool animate);
 void window_manager_set_purify_mode(struct window_manager *wm, enum purify_mode mode);
 void window_manager_set_menubar_opacity(struct window_manager *wm, float opacity);
-void window_manager_set_active_window_opacity(struct window_manager *wm, float opacity);
-void window_manager_set_normal_window_opacity(struct window_manager *wm, float opacity);
-void window_manager_set_window_opacity_enabled(struct window_manager *wm, bool enabled);
-bool window_manager_set_opacity(struct window_manager *wm, struct window *window, float opacity);
-void window_manager_set_window_opacity(struct window_manager *wm, struct window *window, float opacity);
 void window_manager_set_focus_follows_mouse(struct window_manager *wm, enum ffm_mode mode);
 enum window_op_error window_manager_set_window_insertion(struct space_manager *sm, struct window *window, int direction);
 enum window_op_error window_manager_stack_window(struct space_manager *sm, struct window_manager *wm, struct window *a, struct window *b);

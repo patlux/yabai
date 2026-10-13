@@ -26,7 +26,6 @@ void rule_serialize(FILE *rsp, struct rule *rule, int index)
             "\t\"display\":%d,\n"
             "\t\"space\":%d,\n"
             "\t\"follow_space\":%s,\n"
-            "\t\"opacity\":%.4f,\n"
             "\t\"manage\":%s,\n"
             "\t\"sticky\":%s,\n"
             "\t\"mouse_follows_focus\":%s,\n"
@@ -46,7 +45,6 @@ void rule_serialize(FILE *rsp, struct rule *rule, int index)
             rule->effects.did ? display_manager_display_id_arrangement(rule->effects.did) : 0,
             rule->effects.sid ? space_manager_mission_control_index(rule->effects.sid) : 0,
             json_bool(rule_effects_check_flag(&rule->effects, RULE_FOLLOW_SPACE)),
-            rule->effects.opacity,
             json_optional_bool(rule->effects.manage),
             json_optional_bool(rule->effects.sticky),
             json_optional_bool(rule->effects.mff),
@@ -78,11 +76,6 @@ void rule_combine_effects(struct rule_effects *effects, struct rule_effects *res
         } else {
             rule_effects_clear_flag(result, RULE_FOLLOW_SPACE);
         }
-    }
-
-    if (rule_effects_check_flag(effects, RULE_OPACITY) && in_range_ii(effects->opacity, 0.0f, 1.0f)) {
-        result->opacity = effects->opacity;
-        rule_effects_set_flag(result, RULE_OPACITY);
     }
 
     if (rule_effects_check_flag(effects, RULE_LAYER)) {

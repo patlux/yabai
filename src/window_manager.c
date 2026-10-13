@@ -144,11 +144,6 @@ void window_manager_apply_rule_effects_to_window(struct space_manager *sm, struc
         window_manager_set_window_layer(window, effects->layer);
     }
 
-    if (rule_effects_check_flag(effects, RULE_OPACITY) && in_range_ii(effects->opacity, 0.0f, 1.0f)) {
-        window->opacity = effects->opacity;
-        window_manager_set_opacity(wm, window, effects->opacity);
-    }
-
     if (effects->fullscreen == RULE_PROP_ON) {
         AXUIElementSetAttributeValue(window->ref, kAXFullscreenAttribute, kCFBooleanTrue);
         window_set_rule_flag(window, WINDOW_RULE_FULLSCREEN);
@@ -225,16 +220,6 @@ void window_manager_set_focus_follows_mouse(struct window_manager *wm, enum ffm_
     }
 
     wm->ffm_mode = mode;
-}
-
-void window_manager_set_window_opacity_enabled(struct window_manager *wm, bool enabled)
-{
-    wm->enable_window_opacity = enabled;
-    table_for (struct window *window, wm->window, {
-        if (window_manager_is_window_eligible(window)) {
-            window_manager_set_opacity(wm, window, enabled ? window->opacity : 1.0f);
-        }
-    })
 }
 
 void window_manager_center_mouse(struct window_manager *wm, struct window *window)
@@ -520,50 +505,10 @@ void window_manager_set_purify_mode(struct window_manager *wm, enum purify_mode 
     })
 }
 
-bool window_manager_set_opacity(struct window_manager *wm, struct window *window, float opacity)
-{
-    if (opacity == 0.0f) {
-        if (wm->enable_window_opacity) {
-            opacity = window->id == wm->focused_window_id ? wm->active_window_opacity : wm->normal_window_opacity;
-        } else {
-            opacity = 1.0f;
-        }
-    }
-
-    return scripting_addition_set_opacity(window->id, opacity, wm->window_opacity_duration);
-}
-
-void window_manager_set_window_opacity(struct window_manager *wm, struct window *window, float opacity)
-{
-    if (!wm->enable_window_opacity)                 return;
-    if (!window_manager_is_window_eligible(window)) return;
-    if (window->opacity != 0.0f)                    return;
-
-    window_manager_set_opacity(wm, window, opacity);
-}
-
 void window_manager_set_menubar_opacity(struct window_manager *wm, float opacity)
 {
     wm->menubar_opacity = opacity;
     SLSSetMenuBarInsetAndAlpha(g_connection, 0, 1, opacity);
-}
-
-void window_manager_set_active_window_opacity(struct window_manager *wm, float opacity)
-{
-    wm->active_window_opacity = opacity;
-    struct window *window = window_manager_focused_window(wm);
-    if (window) window_manager_set_window_opacity(wm, window, wm->active_window_opacity);
-}
-
-void window_manager_set_normal_window_opacity(struct window_manager *wm, float opacity)
-{
-    wm->normal_window_opacity = opacity;
-    table_for (struct window *window, wm->window, {
-        if (window->id == wm->focused_window_id) continue;
-        if (window_manager_is_window_eligible(window)) {
-            window_manager_set_window_opacity(wm, window, wm->normal_window_opacity);
-        }
-    })
 }
 
 void window_manager_adjust_layer(struct window *window, int layer)
@@ -1239,7 +1184,6 @@ struct window *window_manager_create_and_add_window(struct space_manager *sm, st
             window->is_eligible = true;
             window_manager_apply_rules_to_window(sm, wm, window, window_title, window_role, window_subrole, one_shot_rules);
             window_manager_purify_window(wm, window);
-            window_manager_set_window_opacity(wm, window, wm->normal_window_opacity);
 
             if (application->is_hidden)                              goto out;
             if (window_check_flag(window, WINDOW_MINIMIZE))          goto out;
@@ -2459,11 +2403,7 @@ void window_manager_init(struct window_manager *wm)
     wm->purify_mode = PURIFY_DISABLED;
     wm->window_origin_mode = WINDOW_ORIGIN_DEFAULT;
     wm->enable_mff = false;
-    wm->enable_window_opacity = false;
     wm->menubar_opacity = 1.0f;
-    wm->active_window_opacity = 1.0f;
-    wm->normal_window_opacity = 1.0f;
-    wm->window_opacity_duration = 0.0f;
     wm->insert_feedback_color = rgba_color_from_hex(0xffd75f5f);
 
     table_init(&wm->application, 150, hash_wm, compare_wm);
@@ -2500,6 +2440,5 @@ void window_manager_begin(struct space_manager *sm, struct window_manager *wm)
         wm->last_window_id = window->id;
         wm->focused_window_id = window->id;
         wm->focused_window_psn = window->application->psn;
-        window_manager_set_window_opacity(wm, window, wm->active_window_opacity);
     }
 }

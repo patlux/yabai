@@ -100,7 +100,6 @@ struct window
     uint8_t notification;
     uint8_t rule_flags;
     uint16_t flags;
-    float opacity;
     int layer;
     char *scratchpad;
 };

@@ -22,7 +22,6 @@ enum rule_flag
 enum rule_effects_flag
 {
     RULE_FOLLOW_SPACE = 0x01,
-    RULE_OPACITY      = 0x02,
     RULE_LAYER        = 0x04
 };
 
@@ -30,7 +29,6 @@ struct rule_effects
 {
     uint32_t did;
     uint64_t sid;
-    float opacity;
     int manage;
     int sticky;
     int mff;
