@@ -27,7 +27,6 @@ void rule_serialize(FILE *rsp, struct rule *rule, int index)
             "\t\"space\":%d,\n"
             "\t\"follow_space\":%s,\n"
             "\t\"manage\":%s,\n"
-            "\t\"sticky\":%s,\n"
             "\t\"mouse_follows_focus\":%s,\n"
             "\t\"native-fullscreen\":%s,\n"
             "\t\"grid\":\"%d:%d:%d:%d:%d:%d\",\n"
@@ -45,7 +44,6 @@ void rule_serialize(FILE *rsp, struct rule *rule, int index)
             rule->effects.sid ? space_manager_mission_control_index(rule->effects.sid) : 0,
             json_bool(rule_effects_check_flag(&rule->effects, RULE_FOLLOW_SPACE)),
             json_optional_bool(rule->effects.manage),
-            json_optional_bool(rule->effects.sticky),
             json_optional_bool(rule->effects.mff),
             json_optional_bool(rule->effects.fullscreen),
             rule->effects.grid[0], rule->effects.grid[1],
@@ -82,7 +80,6 @@ void rule_combine_effects(struct rule_effects *effects, struct rule_effects *res
     }
 
     if (effects->manage     != RULE_PROP_UD) result->manage     = effects->manage;
-    if (effects->sticky     != RULE_PROP_UD) result->sticky     = effects->sticky;
     if (effects->mff        != RULE_PROP_UD) result->mff        = effects->mff;
     if (effects->fullscreen != RULE_PROP_UD) result->fullscreen = effects->fullscreen;
 

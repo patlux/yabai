@@ -490,30 +490,11 @@ bool scripting_addition_move_window(uint32_t wid, int x, int y)
     return sa_payload_send(SA_OPCODE_WINDOW_MOVE);
 }
 
-bool scripting_addition_set_sticky(uint32_t wid, bool sticky)
-{
-    sa_payload_init();
-    pack(wid);
-    pack(sticky);
-    return sa_payload_send(SA_OPCODE_WINDOW_STICKY);
-}
-
 bool scripting_addition_focus_window(uint32_t wid)
 {
     sa_payload_init();
     pack(wid);
     return sa_payload_send(SA_OPCODE_WINDOW_FOCUS);
-}
-
-bool scripting_addition_scale_window(uint32_t wid, float x, float y, float w, float h)
-{
-    sa_payload_init();
-    pack(wid);
-    pack(x);
-    pack(y);
-    pack(w);
-    pack(h);
-    return sa_payload_send(SA_OPCODE_WINDOW_SCALE);
 }
 
 bool scripting_addition_order_window(uint32_t a_wid, int order, uint32_t b_wid)

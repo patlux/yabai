@@ -29,7 +29,6 @@ struct rule_effects
     uint32_t did;
     uint64_t sid;
     int manage;
-    int sticky;
     int mff;
     int fullscreen;
     unsigned grid[6];

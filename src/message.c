@@ -150,14 +150,12 @@ extern bool g_verbose;
 #define ARGUMENT_WINDOW_RESIZE          "%255[^:]:%f:%f"
 #define ARGUMENT_WINDOW_RATIO           "%255[^:]:%f"
 #define ARGUMENT_WINDOW_TOGGLE_FLOAT    "float"
-#define ARGUMENT_WINDOW_TOGGLE_STICKY   "sticky"
 #define ARGUMENT_WINDOW_TOGGLE_SPLIT    "split"
 #define ARGUMENT_WINDOW_TOGGLE_PARENT   "zoom-parent"
 #define ARGUMENT_WINDOW_TOGGLE_FULLSC   "zoom-fullscreen"
 #define ARGUMENT_WINDOW_TOGGLE_WINDOWED "windowed-fullscreen"
 #define ARGUMENT_WINDOW_TOGGLE_NATIVE   "native-fullscreen"
 #define ARGUMENT_WINDOW_TOGGLE_EXPOSE   "expose"
-#define ARGUMENT_WINDOW_TOGGLE_PIP      "pip"
 
 #define ARGUMENT_WINDOW_SCRATCHPAD_RECOVER "recover"
 /* ----------------------------------------------------------------------------- */
@@ -186,7 +184,6 @@ extern bool g_verbose;
 #define ARGUMENT_RULE_KEY_DISPLAY    "display"
 #define ARGUMENT_RULE_KEY_SPACE      "space"
 #define ARGUMENT_RULE_KEY_MANAGE     "manage"
-#define ARGUMENT_RULE_KEY_STICKY     "sticky"
 #define ARGUMENT_RULE_KEY_MFF        "mouse_follows_focus"
 #define ARGUMENT_RULE_KEY_FULLSCR    "native-fullscreen"
 #define ARGUMENT_RULE_KEY_GRID       "grid"
@@ -520,14 +517,12 @@ static char *reserved_space_identifiers[] =
 static char *reserved_window_identifiers[] =
 {
     ARGUMENT_WINDOW_TOGGLE_FLOAT,
-    ARGUMENT_WINDOW_TOGGLE_STICKY,
     ARGUMENT_WINDOW_TOGGLE_SPLIT,
     ARGUMENT_WINDOW_TOGGLE_PARENT,
     ARGUMENT_WINDOW_TOGGLE_FULLSC,
     ARGUMENT_WINDOW_TOGGLE_WINDOWED,
     ARGUMENT_WINDOW_TOGGLE_NATIVE,
     ARGUMENT_WINDOW_TOGGLE_EXPOSE,
-    ARGUMENT_WINDOW_TOGGLE_PIP,
     ARGUMENT_WINDOW_SCRATCHPAD_RECOVER
 };
 
@@ -2093,7 +2088,7 @@ static void handle_domain_window(FILE *rsp, struct token domain, char *message)
         } else if (token_equals(command, COMMAND_WINDOW_STACK)) {
             struct selector selector = parse_window_selector(rsp, &message, acting_window, false);
             if (selector.did_parse && selector.window) {
-                enum window_op_error result = window_manager_stack_window(&g_space_manager, &g_window_manager, acting_window, selector.window);
+                enum window_op_error result = window_manager_stack_window(&g_window_manager, acting_window, selector.window);
                 if (result == WINDOW_OP_ERROR_INVALID_SRC_NODE) {
                     daemon_fail(rsp, "the acting window is not managed.\n");
                 } else if (result == WINDOW_OP_ERROR_MAX_STACK) {
@@ -2173,12 +2168,6 @@ static void handle_domain_window(FILE *rsp, struct token domain, char *message)
                 } else {
                     daemon_fail(rsp, "could not locate the window to act on!\n");
                 }
-            } else if (token_equals(value, ARGUMENT_WINDOW_TOGGLE_STICKY)) {
-                if (acting_window) {
-                    window_manager_make_window_sticky(&g_space_manager, &g_window_manager, acting_window, !window_check_flag(acting_window, WINDOW_STICKY));
-                } else {
-                    daemon_fail(rsp, "could not locate the window to act on!\n");
-                }
             } else if (token_equals(value, ARGUMENT_WINDOW_TOGGLE_SPLIT)) {
                 if (acting_window) {
                     space_manager_toggle_window_split(&g_space_manager, acting_window);
@@ -2212,12 +2201,6 @@ static void handle_domain_window(FILE *rsp, struct token domain, char *message)
             } else if (token_equals(value, ARGUMENT_WINDOW_TOGGLE_EXPOSE)) {
                 if (acting_window) {
                     window_manager_toggle_window_expose(acting_window);
-                } else {
-                    daemon_fail(rsp, "could not locate the window to act on!\n");
-                }
-            } else if (token_equals(value, ARGUMENT_WINDOW_TOGGLE_PIP)) {
-                if (acting_window) {
-                    window_manager_toggle_window_pip(&g_space_manager, acting_window);
                 } else {
                     daemon_fail(rsp, "could not locate the window to act on!\n");
                 }
@@ -2549,17 +2532,6 @@ static bool parse_rule(FILE *rsp, char **message, struct rule *rule, struct toke
                 rule->effects.manage = RULE_PROP_ON;
             } else if (string_equals(value, ARGUMENT_COMMON_VAL_OFF)) {
                 rule->effects.manage = RULE_PROP_OFF;
-            } else {
-                daemon_fail(rsp, "invalid value '%s' for key '%s'\n", value, key);
-                did_parse = false;
-            }
-        } else if (string_equals(key, ARGUMENT_RULE_KEY_STICKY)) {
-            if (exclusion) unsupported_exclusion = key;
-
-            if (string_equals(value, ARGUMENT_COMMON_VAL_ON)) {
-                rule->effects.sticky = RULE_PROP_ON;
-            } else if (string_equals(value, ARGUMENT_COMMON_VAL_OFF)) {
-                rule->effects.sticky = RULE_PROP_OFF;
             } else {
                 daemon_fail(rsp, "invalid value '%s' for key '%s'\n", value, key);
                 did_parse = false;

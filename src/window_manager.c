@@ -126,12 +126,6 @@ void window_manager_apply_rule_effects_to_window(struct space_manager *sm, struc
         }
     }
 
-    if (effects->sticky == RULE_PROP_ON) {
-        window_manager_make_window_sticky(sm, wm, window, true);
-    } else if (effects->sticky == RULE_PROP_OFF) {
-        window_manager_make_window_sticky(sm, wm, window, false);
-    }
-
     if (effects->mff == RULE_PROP_ON) {
         window_set_rule_flag(window, WINDOW_RULE_MFF);
         window_set_rule_flag(window, WINDOW_RULE_MFF_VALUE);
@@ -1394,7 +1388,7 @@ enum window_op_error window_manager_set_window_insertion(struct space_manager *s
     return WINDOW_OP_ERROR_SUCCESS;
 }
 
-enum window_op_error window_manager_stack_window(struct space_manager *sm, struct window_manager *wm, struct window *a, struct window *b)
+enum window_op_error window_manager_stack_window(struct window_manager *wm, struct window *a, struct window *b)
 {
     TIME_FUNCTION;
 
@@ -1410,7 +1404,6 @@ enum window_op_error window_manager_stack_window(struct space_manager *sm, struc
     } else if (window_check_flag(b, WINDOW_FLOAT)) {
         if (!window_manager_is_window_eligible(b)) return WINDOW_OP_ERROR_INVALID_SRC_NODE;
         window_clear_flag(b, WINDOW_FLOAT);
-        if (window_check_flag(b, WINDOW_STICKY)) window_manager_make_window_sticky(sm, wm, b, false);
     }
 
     struct window_node *a_node = view_find_window_node(a_view, a->id);
@@ -1805,35 +1798,6 @@ void window_manager_make_window_floating(struct space_manager *sm, struct window
     }
 }
 
-void window_manager_make_window_sticky(struct space_manager *sm, struct window_manager *wm, struct window *window, bool should_sticky)
-{
-    TIME_FUNCTION;
-
-    if (!window_manager_is_window_eligible(window)) return;
-
-    if (should_sticky) {
-        if (scripting_addition_set_sticky(window->id, true)) {
-            struct view *view = window_manager_find_managed_window(wm, window);
-            if (view) {
-                space_manager_untile_window(view, window);
-                window_manager_remove_managed_window(wm, window->id);
-            }
-            window_set_flag(window, WINDOW_STICKY);
-        }
-    } else {
-        if (scripting_addition_set_sticky(window->id, false)) {
-            window_clear_flag(window, WINDOW_STICKY);
-
-            if (!window_check_flag(window, WINDOW_FLOAT)) {
-                if ((window_manager_should_manage_window(window)) && (!window_manager_find_managed_window(wm, window))) {
-                    struct view *view = space_manager_tile_window_on_space(sm, window, space_manager_active_space());
-                    window_manager_add_managed_window(wm, window, view);
-                }
-            }
-        }
-    }
-}
-
 void window_manager_wait_for_native_fullscreen_transition(struct window *window)
 {
     TIME_FUNCTION;
@@ -1983,27 +1947,6 @@ void window_manager_toggle_window_expose(struct window *window)
 
     window_manager_focus_window_with_raise(&window->application->psn, window->id, window->ref);
     CoreDockSendNotification(CFSTR("com.apple.expose.front.awake"), 0);
-}
-
-void window_manager_toggle_window_pip(struct space_manager *sm, struct window *window)
-{
-    TIME_FUNCTION;
-
-    uint32_t did = window_display_id(window->id);
-    if (!did) return;
-
-    uint64_t sid = display_space_id(did);
-    struct view *dview = space_manager_find_view(sm, sid);
-
-    CGRect bounds = display_bounds_constrained(did, false);
-    if (dview && view_check_flag(dview, VIEW_ENABLE_PADDING)) {
-        bounds.origin.x    += dview->left_padding;
-        bounds.size.width  -= (dview->left_padding + dview->right_padding);
-        bounds.origin.y    += dview->top_padding;
-        bounds.size.height -= (dview->top_padding + dview->bottom_padding);
-    }
-
-    scripting_addition_scale_window(window->id, bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
 }
 
 static inline struct window *window_manager_find_scratchpad_window(struct window_manager *wm, char *label)
