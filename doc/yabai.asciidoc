@@ -384,20 +384,8 @@ COMMAND
     If type is 'rel' the split ratio of the selected window is changed by 'dr', otherwise 'dr' will become the new split ratio. +
     A positive/negative delta will increase/decrease the size of the left-child.
 
-*--toggle* 'float|split|zoom-parent|zoom-fullscreen|windowed-fullscreen|native-fullscreen|expose|<LABEL>'::
-    Toggle the given property of the selected window. +
-    The following properties require System Integrity Protection to be partially disabled: LABEL (scratchpad identifier) .
-
-*--scratchpad* ['<LABEL>|recover']::
-    Unique identifier used to identify a window scratchpad. +
-    An identifier may only be assigned to a single window at any given time. +
-    A scratchpad window will automatically be treated as a (manage=off) floating window. +
-    If the scratchpad is already taken by another window, this assignment will fail. +
-    If the scratchpad is re-assigned, the previous identifier will become available. +
-    If no value is given, the window will seize to be a scratchpad window. +
-    The special value 'recover' can be used to forcefully bring all scratchpad windows to the front. +
-    This can be useful if windows become inaccessible due to a restart or crash. +
-    System Integrity Protection must be partially disabled.
+*--toggle* 'float|split|zoom-parent|zoom-fullscreen|windowed-fullscreen|native-fullscreen|expose'::
+    Toggle the given property of the selected window.
 
 Query
 ~~~~~~
@@ -486,7 +474,6 @@ WINDOW
     "pid": number,
     "app": string,
     "title": string,
-    "scratchpad": string,
     "frame": object {
         "x": number,
         "y": number,
@@ -548,8 +535,7 @@ Rule
 
 All rules that match the given filter will be applied in the order they were registered. +
 If multiple rules specify a value for the same property, the latter rule will end up overriding that value. +
-If the display and space properties are both set, the space property will take precedence. +
-The following properties require System Integrity Protection to be partially disabled: scratchpad.
+If the display and space properties are both set, the space property will take precedence.
 
 General Syntax
 ^^^^^^^^^^^^^^
@@ -613,13 +599,6 @@ ARGUMENT
 *grid='<rows>:<cols>:<start-x>:<start-y>:<width>:<height>'*::
     Set window frame based on a self-defined grid.
 
-*scratchpad='<LABEL>'*::
-    Unique identifier used to identify a window scratchpad. +
-    An identifier may only be assigned to a single window at any given time. +
-    A scratchpad window will automatically be treated as a (manage=off) floating window. +
-    If this rule matches multiple windows, only the first window that matched will be assigned this scratchpad identifier. +
-    System Integrity Protection must be partially disabled.
-
 DATAFORMAT
 ^^^^^^^^^^
 
@@ -639,7 +618,6 @@ DATAFORMAT
     "mouse_follows_focus": bool (optional),
     "native-fullscreen": bool (optional),
     "grid": string,
-    "scratchpad": string,
     "one-shot": bool,
     "flags": string
 }

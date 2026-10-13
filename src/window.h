@@ -33,7 +33,6 @@ static CFStringRef ax_window_notification[] =
     WINDOW_PROPERTY_ENTRY("pid",                  WINDOW_PROPERTY_PID,                 0x000000002) \
     WINDOW_PROPERTY_ENTRY("app",                  WINDOW_PROPERTY_APP,                 0x000000004) \
     WINDOW_PROPERTY_ENTRY("title",                WINDOW_PROPERTY_TITLE,               0x000000008) \
-    WINDOW_PROPERTY_ENTRY("scratchpad",           WINDOW_PROPERTY_SCRATCHPAD,          0x000000010) \
     WINDOW_PROPERTY_ENTRY("frame",                WINDOW_PROPERTY_FRAME,               0x000000020) \
     WINDOW_PROPERTY_ENTRY("role",                 WINDOW_PROPERTY_ROLE,                0x000000040) \
     WINDOW_PROPERTY_ENTRY("subrole",              WINDOW_PROPERTY_SUBROLE,             0x000000080) \
@@ -100,7 +99,6 @@ struct window
     uint8_t notification;
     uint8_t rule_flags;
     uint16_t flags;
-    char *scratchpad;
 };
 
 enum window_flag

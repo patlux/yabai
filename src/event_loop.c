@@ -301,7 +301,6 @@ static EVENT_HANDLER(APPLICATION_TERMINATED)
             event_signal_push(SIGNAL_WINDOW_DESTROYED, window);
         }
 
-        window_manager_remove_scratchpad_for_window(&g_window_manager, window, false);
         window_manager_remove_window(&g_window_manager, window->id);
         window_unobserve(window);
         window_destroy(window);
@@ -602,7 +601,6 @@ static EVENT_HANDLER(WINDOW_DESTROYED)
         event_signal_push(SIGNAL_WINDOW_DESTROYED, window);
     }
 
-    window_manager_remove_scratchpad_for_window(&g_window_manager, window, false);
     window_manager_remove_window(&g_window_manager, window->id);
     window_unobserve(window);
     window_destroy(window);

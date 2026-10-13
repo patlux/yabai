@@ -30,7 +30,6 @@ void rule_serialize(FILE *rsp, struct rule *rule, int index)
             "\t\"mouse_follows_focus\":%s,\n"
             "\t\"native-fullscreen\":%s,\n"
             "\t\"grid\":\"%d:%d:%d:%d:%d:%d\",\n"
-            "\t\"scratchpad\":\"%s\",\n"
             "\t\"one-shot\":%s,\n"
             "\t\"flags\":\"0x%08x\"\n"
             "}",
@@ -49,7 +48,6 @@ void rule_serialize(FILE *rsp, struct rule *rule, int index)
             rule->effects.grid[0], rule->effects.grid[1],
             rule->effects.grid[2], rule->effects.grid[3],
             rule->effects.grid[4], rule->effects.grid[5],
-            rule->effects.scratchpad ? rule->effects.scratchpad : "",
             json_bool(rule_check_flag(rule, RULE_ONE_SHOT)),
             (uint32_t)(rule->effects.flags << 16) | (uint32_t)rule->flags);
 }
@@ -72,11 +70,6 @@ void rule_combine_effects(struct rule_effects *effects, struct rule_effects *res
         } else {
             rule_effects_clear_flag(result, RULE_FOLLOW_SPACE);
         }
-    }
-
-    if (effects->scratchpad) {
-        if (result->scratchpad) free(result->scratchpad);
-        result->scratchpad = string_copy(effects->scratchpad);
     }
 
     if (effects->manage     != RULE_PROP_UD) result->manage     = effects->manage;
@@ -199,6 +192,4 @@ void rule_destroy(struct rule *rule)
     if (rule->title)   free(rule->title);
     if (rule->role)    free(rule->role);
     if (rule->subrole) free(rule->subrole);
-
-    if (rule->effects.scratchpad) free(rule->effects.scratchpad);
 }

@@ -16,8 +16,6 @@ bool scripting_addition_move_space_to_display(uint64_t src_sid, uint64_t dst_sid
 bool scripting_addition_move_space_after_space(uint64_t src_sid, uint64_t dst_sid, bool focus);
 bool scripting_addition_move_window(uint32_t wid, int x, int y);
 bool scripting_addition_focus_window(uint32_t wid);
-bool scripting_addition_order_window(uint32_t a_wid, int order, uint32_t b_wid);
-bool scripting_addition_order_window_in(uint32_t *window_list, int window_count);
 bool scripting_addition_move_window_list_to_space(uint64_t sid, uint32_t *window_list, int window_count);
 bool scripting_addition_move_window_to_space(uint64_t sid, uint32_t wid);
 

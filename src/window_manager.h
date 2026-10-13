@@ -51,12 +51,6 @@ static const char *window_origin_mode_str[] =
     "cursor"
 };
 
-struct scratchpad
-{
-    char *label;
-    struct window *window;
-};
-
 struct window_manager
 {
     AXUIElementRef system_element;
@@ -76,7 +70,6 @@ struct window_manager
     enum window_origin_mode window_origin_mode;
     float menubar_opacity;
     struct rgba_color insert_feedback_color;
-    struct scratchpad *scratchpad_window;
 };
 
 void window_manager_query_window_rules(FILE *rsp);
@@ -168,11 +161,6 @@ void window_manager_toggle_window_zoom_fullscreen(struct window_manager *wm, str
 void window_manager_toggle_window_windowed_fullscreen(struct window *window);
 void window_manager_toggle_window_native_fullscreen(struct window *window);
 void window_manager_toggle_window_expose(struct window *window);
-bool window_manager_toggle_scratchpad_window_by_label(struct window_manager *wm, char *label);
-bool window_manager_toggle_scratchpad_window(struct window_manager *wm, struct window *window, int forced_mode);
-bool window_manager_set_scratchpad_for_window(struct window_manager *wm, struct window *window, char *label);
-bool window_manager_remove_scratchpad_for_window(struct window_manager *wm, struct window *window, bool unfloat);
-void window_manager_scratchpad_recover_windows(void);
 void window_manager_wait_for_native_fullscreen_transition(struct window *window);
 void window_manager_validate_and_check_for_windows_on_space(struct space_manager *sm, struct window_manager *wm, uint64_t sid);
 void window_manager_correct_for_mission_control_changes(struct space_manager *sm, struct window_manager *wm);

@@ -190,13 +190,6 @@ void window_nonax_serialize(FILE *rsp, uint32_t wid, uint64_t flags)
         did_output = true;
     }
 
-    if (flags & WINDOW_PROPERTY_SCRATCHPAD) {
-        if (did_output) fprintf(rsp, ",\n");
-
-        fprintf(rsp, "\t\"scratchpad\":\"%s\"", "");
-        did_output = true;
-    }
-
     if (flags & WINDOW_PROPERTY_FRAME) {
         if (did_output) fprintf(rsp, ",\n");
 
@@ -487,13 +480,6 @@ void window_serialize(FILE *rsp, struct window *window, uint64_t flags)
         char *escaped_title = ts_string_escape(title);
 
         fprintf(rsp, "\t\"title\":\"%s\"", escaped_title ? escaped_title : title);
-        did_output = true;
-    }
-
-    if (flags & WINDOW_PROPERTY_SCRATCHPAD) {
-        if (did_output) fprintf(rsp, ",\n");
-
-        fprintf(rsp, "\t\"scratchpad\":\"%s\"", window->scratchpad ? window->scratchpad : "");
         did_output = true;
     }
 

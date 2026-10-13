@@ -135,7 +135,6 @@ extern bool g_verbose;
 #define COMMAND_WINDOW_RESIZE     "--resize"
 #define COMMAND_WINDOW_RATIO      "--ratio"
 #define COMMAND_WINDOW_TOGGLE     "--toggle"
-#define COMMAND_WINDOW_SCRATCHPAD "--scratchpad"
 
 #define ARGUMENT_WINDOW_SEL_LARGEST     "largest"
 #define ARGUMENT_WINDOW_SEL_SMALLEST    "smallest"
@@ -157,7 +156,6 @@ extern bool g_verbose;
 #define ARGUMENT_WINDOW_TOGGLE_NATIVE   "native-fullscreen"
 #define ARGUMENT_WINDOW_TOGGLE_EXPOSE   "expose"
 
-#define ARGUMENT_WINDOW_SCRATCHPAD_RECOVER "recover"
 /* ----------------------------------------------------------------------------- */
 
 /* --------------------------------DOMAIN QUERY--------------------------------- */
@@ -188,7 +186,6 @@ extern bool g_verbose;
 #define ARGUMENT_RULE_KEY_FULLSCR    "native-fullscreen"
 #define ARGUMENT_RULE_KEY_GRID       "grid"
 #define ARGUMENT_RULE_KEY_LABEL      "label"
-#define ARGUMENT_RULE_KEY_SCRATCHPAD "scratchpad"
 
 #define ARGUMENT_RULE_VALUE_SPACE '^'
 #define ARGUMENT_RULE_VALUE_GRID  "%d:%d:%d:%d:%d:%d"
@@ -486,8 +483,7 @@ static uint8_t parse_resize_handle(char *handle)
 enum label_type
 {
     LABEL_DISPLAY,
-    LABEL_SPACE,
-    LABEL_WINDOW
+    LABEL_SPACE
 };
 
 static char *reserved_display_identifiers[] =
@@ -512,18 +508,6 @@ static char *reserved_space_identifiers[] =
     ARGUMENT_COMMON_SEL_LAST,
     ARGUMENT_COMMON_SEL_RECENT,
     ARGUMENT_COMMON_SEL_MOUSE
-};
-
-static char *reserved_window_identifiers[] =
-{
-    ARGUMENT_WINDOW_TOGGLE_FLOAT,
-    ARGUMENT_WINDOW_TOGGLE_SPLIT,
-    ARGUMENT_WINDOW_TOGGLE_PARENT,
-    ARGUMENT_WINDOW_TOGGLE_FULLSC,
-    ARGUMENT_WINDOW_TOGGLE_WINDOWED,
-    ARGUMENT_WINDOW_TOGGLE_NATIVE,
-    ARGUMENT_WINDOW_TOGGLE_EXPOSE,
-    ARGUMENT_WINDOW_SCRATCHPAD_RECOVER
 };
 
 static bool parse_label(FILE *rsp, struct token token, enum label_type type, char **label)
@@ -554,14 +538,6 @@ static bool parse_label(FILE *rsp, struct token token, enum label_type type, cha
         for (int i = 0; i < array_count(reserved_space_identifiers); ++i) {
             if (token_equals(token, reserved_space_identifiers[i])) {
                 daemon_fail(rsp, "'%.*s' is a reserved keyword and cannot be used as a label.\n", token.length, token.text);
-                return false;
-            }
-        }
-    } break;
-    case LABEL_WINDOW: {
-        for (int i = 0; i < array_count(reserved_window_identifiers); ++i) {
-            if (token_equals(token, reserved_window_identifiers[i])) {
-                daemon_fail(rsp, "'%.*s' is a reserved keyword and cannot be used as a scratchpad.\n", token.length, token.text);
                 return false;
             }
         }
@@ -2204,24 +2180,8 @@ static void handle_domain_window(FILE *rsp, struct token domain, char *message)
                 } else {
                     daemon_fail(rsp, "could not locate the window to act on!\n");
                 }
-            } else if (!window_manager_toggle_scratchpad_window_by_label(&g_window_manager, value.text)) {
+            } else {
                 daemon_fail(rsp, "unknown value '%.*s' given to command '%.*s' for domain '%.*s'\n", value.length, value.text, command.length, command.text, domain.length, domain.text);
-            }
-        } else if (token_equals(command, COMMAND_WINDOW_SCRATCHPAD)) {
-            char *label;
-            struct token token = get_token(&message);
-            if (token_is_valid(token) && token_equals(token, ARGUMENT_WINDOW_SCRATCHPAD_RECOVER)) {
-                window_manager_scratchpad_recover_windows();
-            } else if (parse_label(rsp, token, LABEL_WINDOW, &label)) {
-                if (label) {
-                    if (!window_manager_set_scratchpad_for_window(&g_window_manager, acting_window, label)) {
-                        daemon_fail(rsp, "the given scratchpad is already assigned to a different window!\n");
-                    }
-                } else {
-                    if (!window_manager_remove_scratchpad_for_window(&g_window_manager, acting_window, true)) {
-                        daemon_fail(rsp, "the selected window was not assigned to a scratchpad!\n");
-                    }
-                }
             }
         } else {
             daemon_fail(rsp, "unknown command '%.*s' for domain '%.*s'\n", command.length, command.text, domain.length, domain.text);
@@ -2429,24 +2389,6 @@ static bool parse_rule(FILE *rsp, char **message, struct rule *rule, struct toke
         if (string_equals(key, ARGUMENT_RULE_KEY_LABEL)) {
             if (exclusion) unsupported_exclusion = key;
             rule->label = string_copy(value);
-        } else if (string_equals(key, ARGUMENT_RULE_KEY_SCRATCHPAD)) {
-            if (exclusion) unsupported_exclusion = key;
-
-            bool valid = true;
-            for (int i = 0; i < array_count(reserved_window_identifiers); ++i) {
-                if (string_equals(value, reserved_window_identifiers[i])) {
-                    valid = false;
-                    break;
-                }
-            }
-
-            if (valid) {
-                rule->effects.scratchpad = string_copy(value);
-                rule->effects.manage = RULE_PROP_OFF;
-            } else {
-                daemon_fail(rsp, "invalid value '%s' for key '%s'\n", value, key);
-                did_parse = false;
-            }
         } else if (string_equals(key, ARGUMENT_RULE_KEY_APP)) {
             has_filter = true;
             rule->app = string_copy(value);

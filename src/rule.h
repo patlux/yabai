@@ -32,7 +32,6 @@ struct rule_effects
     int mff;
     int fullscreen;
     unsigned grid[6];
-    char *scratchpad;
     uint16_t flags;
 };
 
