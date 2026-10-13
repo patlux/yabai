@@ -201,7 +201,6 @@ static EVENT_HANDLER(APPLICATION_LAUNCHED)
                 // This is necessary to make sure that we do not call the AX API for each modification to the tree.
                 //
 
-                window_manager_adjust_layer(window, LAYER_BELOW);
                 view_add_window_node_with_insertion_point(view, window, prev_window_id);
                 window_manager_add_managed_window(&g_window_manager, window, view);
 
@@ -438,7 +437,6 @@ static EVENT_HANDLER(APPLICATION_VISIBLE)
             // This is necessary to make sure that we do not call the AX API for each modification to the tree.
             //
 
-            window_manager_adjust_layer(window, LAYER_BELOW);
             view_add_window_node_with_insertion_point(view, window, prev_window_id);
             window_manager_add_managed_window(&g_window_manager, window, view);
 
@@ -500,7 +498,6 @@ static EVENT_HANDLER(APPLICATION_HIDDEN)
             // This is necessary to make sure that we do not call the AX API for each modification to the tree.
             //
 
-            window_manager_adjust_layer(window, LAYER_NORMAL);
             view_remove_window_node(view, window);
             window_manager_remove_managed_window(&g_window_manager, window->id);
 

@@ -134,9 +134,6 @@ extern bool g_verbose;
 #define COMMAND_WINDOW_MOVE       "--move"
 #define COMMAND_WINDOW_RESIZE     "--resize"
 #define COMMAND_WINDOW_RATIO      "--ratio"
-#define COMMAND_WINDOW_SUB_LAYER  "--sub-layer"
-#define COMMAND_WINDOW_RAISE      "--raise"
-#define COMMAND_WINDOW_LOWER      "--lower"
 #define COMMAND_WINDOW_TOGGLE     "--toggle"
 #define COMMAND_WINDOW_SCRATCHPAD "--scratchpad"
 
@@ -152,10 +149,6 @@ extern bool g_verbose;
 #define ARGUMENT_WINDOW_MOVE            "%255[^:]:%f:%f"
 #define ARGUMENT_WINDOW_RESIZE          "%255[^:]:%f:%f"
 #define ARGUMENT_WINDOW_RATIO           "%255[^:]:%f"
-#define ARGUMENT_WINDOW_LAYER_BELOW     "below"
-#define ARGUMENT_WINDOW_LAYER_NORMAL    "normal"
-#define ARGUMENT_WINDOW_LAYER_ABOVE     "above"
-#define ARGUMENT_WINDOW_LAYER_AUTO      "auto"
 #define ARGUMENT_WINDOW_TOGGLE_FLOAT    "float"
 #define ARGUMENT_WINDOW_TOGGLE_STICKY   "sticky"
 #define ARGUMENT_WINDOW_TOGGLE_SPLIT    "split"
@@ -195,7 +188,6 @@ extern bool g_verbose;
 #define ARGUMENT_RULE_KEY_MANAGE     "manage"
 #define ARGUMENT_RULE_KEY_STICKY     "sticky"
 #define ARGUMENT_RULE_KEY_MFF        "mouse_follows_focus"
-#define ARGUMENT_RULE_KEY_SUB_LAYER  "sub-layer"
 #define ARGUMENT_RULE_KEY_FULLSCR    "native-fullscreen"
 #define ARGUMENT_RULE_KEY_GRID       "grid"
 #define ARGUMENT_RULE_KEY_LABEL      "label"
@@ -2232,57 +2224,6 @@ static void handle_domain_window(FILE *rsp, struct token domain, char *message)
             } else if (!window_manager_toggle_scratchpad_window_by_label(&g_window_manager, value.text)) {
                 daemon_fail(rsp, "unknown value '%.*s' given to command '%.*s' for domain '%.*s'\n", value.length, value.text, command.length, command.text, domain.length, domain.text);
             }
-        } else if (token_equals(command, COMMAND_WINDOW_SUB_LAYER)) {
-            struct token value = get_token(&message);
-            if (token_equals(value, ARGUMENT_WINDOW_LAYER_BELOW)) {
-                if (!window_manager_set_window_layer(acting_window, LAYER_BELOW)) {
-                    daemon_fail(rsp, "could not change sub-layer of window with id '%d' due to an error with the scripting-addition.\n", acting_window->id);
-                }
-            } else if (token_equals(value, ARGUMENT_WINDOW_LAYER_NORMAL)) {
-                if (!window_manager_set_window_layer(acting_window, LAYER_NORMAL)) {
-                    daemon_fail(rsp, "could not change sub-layer of window with id '%d' due to an error with the scripting-addition.\n", acting_window->id);
-                }
-            } else if (token_equals(value, ARGUMENT_WINDOW_LAYER_ABOVE)) {
-                if (!window_manager_set_window_layer(acting_window, LAYER_ABOVE)) {
-                    daemon_fail(rsp, "could not change sub-layer of window with id '%d' due to an error with the scripting-addition.\n", acting_window->id);
-                }
-            } else if (token_equals(value, ARGUMENT_WINDOW_LAYER_AUTO)) {
-                if (!window_manager_set_window_layer(acting_window, LAYER_AUTO)) {
-                    daemon_fail(rsp, "could not change sub-layer of window with id '%d' due to an error with the scripting-addition.\n", acting_window->id);
-                }
-            } else {
-                daemon_fail(rsp, "unknown value '%.*s' given to command '%.*s' for domain '%.*s'\n", value.length, value.text, command.length, command.text, domain.length, domain.text);
-            }
-        } else if (token_equals(command, COMMAND_WINDOW_RAISE)) {
-            struct selector selector = parse_window_selector(rsp, &message, acting_window, true);
-            uint32_t selector_wid = 0;
-
-            if (token_is_valid(selector.token)) {
-                if (selector.did_parse && selector.window) {
-                    selector_wid = selector.window->id;
-                } else {
-                    return;
-                }
-            }
-
-            if (!scripting_addition_order_window(acting_window->id, 1, selector_wid)) {
-                daemon_fail(rsp, "could not raise window with id '%d' due to an error with the scripting-addition.\n", acting_window->id);
-            }
-        } else if (token_equals(command, COMMAND_WINDOW_LOWER)) {
-            struct selector selector = parse_window_selector(rsp, &message, acting_window, true);
-            uint32_t selector_wid = 0;
-
-            if (token_is_valid(selector.token)) {
-                if (selector.did_parse && selector.window) {
-                    selector_wid = selector.window->id;
-                } else {
-                    return;
-                }
-            }
-
-            if (!scripting_addition_order_window(acting_window->id, -1, selector_wid)) {
-                daemon_fail(rsp, "could not lower window with id '%d' due to an error with the scripting-addition.\n", acting_window->id);
-            }
         } else if (token_equals(command, COMMAND_WINDOW_SCRATCHPAD)) {
             char *label;
             struct token token = get_token(&message);
@@ -2630,25 +2571,6 @@ static bool parse_rule(FILE *rsp, char **message, struct rule *rule, struct toke
                 rule->effects.mff = RULE_PROP_ON;
             } else if (string_equals(value, ARGUMENT_COMMON_VAL_OFF)) {
                 rule->effects.mff = RULE_PROP_OFF;
-            } else {
-                daemon_fail(rsp, "invalid value '%s' for key '%s'\n", value, key);
-                did_parse = false;
-            }
-        } else if (string_equals(key, ARGUMENT_RULE_KEY_SUB_LAYER)) {
-            if (exclusion) unsupported_exclusion = key;
-
-            if (string_equals(value, ARGUMENT_WINDOW_LAYER_BELOW)) {
-                rule->effects.layer = LAYER_BELOW;
-                rule_effects_set_flag(&rule->effects, RULE_LAYER);
-            } else if (string_equals(value, ARGUMENT_WINDOW_LAYER_NORMAL)) {
-                rule->effects.layer = LAYER_NORMAL;
-                rule_effects_set_flag(&rule->effects, RULE_LAYER);
-            } else if (string_equals(value, ARGUMENT_WINDOW_LAYER_ABOVE)) {
-                rule->effects.layer = LAYER_ABOVE;
-                rule_effects_set_flag(&rule->effects, RULE_LAYER);
-            } else if (string_equals(value, ARGUMENT_WINDOW_LAYER_AUTO)) {
-                rule->effects.layer = LAYER_AUTO;
-                rule_effects_set_flag(&rule->effects, RULE_LAYER);
             } else {
                 daemon_fail(rsp, "invalid value '%s' for key '%s'\n", value, key);
                 did_parse = false;

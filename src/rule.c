@@ -29,7 +29,6 @@ void rule_serialize(FILE *rsp, struct rule *rule, int index)
             "\t\"manage\":%s,\n"
             "\t\"sticky\":%s,\n"
             "\t\"mouse_follows_focus\":%s,\n"
-            "\t\"sub-layer\":\"%s\",\n"
             "\t\"native-fullscreen\":%s,\n"
             "\t\"grid\":\"%d:%d:%d:%d:%d:%d\",\n"
             "\t\"scratchpad\":\"%s\",\n"
@@ -48,7 +47,6 @@ void rule_serialize(FILE *rsp, struct rule *rule, int index)
             json_optional_bool(rule->effects.manage),
             json_optional_bool(rule->effects.sticky),
             json_optional_bool(rule->effects.mff),
-            rule_effects_check_flag(&rule->effects, RULE_LAYER) ? layer_str[rule->effects.layer] : "",
             json_optional_bool(rule->effects.fullscreen),
             rule->effects.grid[0], rule->effects.grid[1],
             rule->effects.grid[2], rule->effects.grid[3],
@@ -76,11 +74,6 @@ void rule_combine_effects(struct rule_effects *effects, struct rule_effects *res
         } else {
             rule_effects_clear_flag(result, RULE_FOLLOW_SPACE);
         }
-    }
-
-    if (rule_effects_check_flag(effects, RULE_LAYER)) {
-        result->layer = effects->layer;
-        rule_effects_set_flag(result, RULE_LAYER);
     }
 
     if (effects->scratchpad) {

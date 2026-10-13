@@ -490,14 +490,6 @@ bool scripting_addition_move_window(uint32_t wid, int x, int y)
     return sa_payload_send(SA_OPCODE_WINDOW_MOVE);
 }
 
-bool scripting_addition_set_layer(uint32_t wid, int layer)
-{
-    sa_payload_init();
-    pack(wid);
-    pack(layer);
-    return sa_payload_send(SA_OPCODE_WINDOW_LAYER);
-}
-
 bool scripting_addition_set_sticky(uint32_t wid, bool sticky)
 {
     sa_payload_init();

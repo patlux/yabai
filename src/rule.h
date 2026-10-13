@@ -21,8 +21,7 @@ enum rule_flag
 
 enum rule_effects_flag
 {
-    RULE_FOLLOW_SPACE = 0x01,
-    RULE_LAYER        = 0x04
+    RULE_FOLLOW_SPACE = 0x01
 };
 
 struct rule_effects
@@ -32,7 +31,6 @@ struct rule_effects
     int manage;
     int sticky;
     int mff;
-    int layer;
     int fullscreen;
     unsigned grid[6];
     char *scratchpad;

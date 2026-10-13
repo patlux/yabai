@@ -139,8 +139,6 @@ void mouse_drop_action_stack(struct window_manager *wm, struct view *src_view, s
     if (dst_node->window_count+1 < NODE_MAX_WINDOW_COUNT) {
         view_stack_window_node(dst_node, src_window);
         window_manager_add_managed_window(wm, src_window, dst_view);
-        window_manager_adjust_layer(src_window, LAYER_BELOW);
-        scripting_addition_order_window(src_window->id, 1, dst_node->window_order[1]);
 
         if (dst_node->zoom) {
             window_manager_animate_window((struct window_capture) { src_window, dst_node->zoom->area.x, dst_node->zoom->area.y, dst_node->zoom->area.w, dst_node->zoom->area.h });

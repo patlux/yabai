@@ -87,8 +87,6 @@ REGEX       := https://www.gnu.org/software/findutils/manual/html_node/find_html
 
 LABEL       := arbitrary string/text used as an identifier
 
-LAYER       := below | normal | above | auto
-
 BOOL_SEL    := on | off
 
 FLOAT_SEL   := 0 < <value> <= 1.0
@@ -390,20 +388,6 @@ COMMAND
     Toggle the given property of the selected window. +
     The following properties require System Integrity Protection to be partially disabled: sticky, pip, LABEL (scratchpad identifier) .
 
-*--sub-layer* '<LAYER>'::
-    Set the stacking sub-layer of the selected window. +
-    The window will no longer be eligible for automatic change in sub-layer when managed/unmanaged. +
-    Specify the value 'auto' to reset back to normal and make it become automatically managed. +
-    System Integrity Protection must be partially disabled.
-
-*--raise* ['<WINDOW_SEL>']::
-    Orders the selected window above the given window, or to the front within its layer. +
-    System Integrity Protection must be partially disabled.
-
-*--lower* ['<WINDOW_SEL>']::
-    Orders the selected window below the given window, or to the back within its layer. +
-    System Integrity Protection must be partially disabled.
-
 *--scratchpad* ['<LABEL>|recover']::
     Unique identifier used to identify a window scratchpad. +
     An identifier may only be assigned to a single window at any given time. +
@@ -565,7 +549,7 @@ Rule
 All rules that match the given filter will be applied in the order they were registered. +
 If multiple rules specify a value for the same property, the latter rule will end up overriding that value. +
 If the display and space properties are both set, the space property will take precedence. +
-The following properties require System Integrity Protection to be partially disabled: sticky, sub-layer, scratchpad.
+The following properties require System Integrity Protection to be partially disabled: sticky, scratchpad.
 
 General Syntax
 ^^^^^^^^^^^^^^
@@ -627,12 +611,6 @@ ARGUMENT
 *mouse_follows_focus='<BOOL_SEL>'*::
     When focusing the window, put the mouse at its center. Overrides the global *mouse_follows_focus* setting.
 
-*sub-layer='<LAYER>'*::
-    Window is ordered within the given stacking sub-layer. +
-    The window will no longer be eligible for automatic change in sub-layer when managed/unmanaged. +
-    Specify the value 'auto' to reset back to normal and make it become automatically managed. +
-    System Integrity Protection must be partially disabled.
-
 *native-fullscreen='<BOOL_SEL>'*::
     Window should enter native macOS fullscreen mode.
 
@@ -664,7 +642,6 @@ DATAFORMAT
     "manage": bool (optional),
     "sticky": bool (optional),
     "mouse_follows_focus": bool (optional),
-    "sub-layer": string,
     "native-fullscreen": bool (optional),
     "grid": string,
     "scratchpad": string,
