@@ -95,10 +95,6 @@ bool space_manager_focus_space_using_gesture(uint32_t new_did, uint64_t new_sid)
 enum space_op_error space_manager_focus_space(uint64_t sid);
 enum space_op_error space_manager_switch_space(uint64_t sid);
 enum space_op_error space_manager_swap_space_with_space(uint64_t acting_sid, uint64_t selector_sid);
-enum space_op_error space_manager_move_space_to_space(uint64_t acting_sid, uint64_t selector_sid);
-enum space_op_error space_manager_move_space_to_display(struct space_manager *sm, uint64_t sid, uint32_t did);
-enum space_op_error space_manager_destroy_space(uint64_t sid);
-enum space_op_error space_manager_add_space(uint64_t sid);
 void space_manager_assign_process_to_space(pid_t pid, uint64_t sid);
 void space_manager_assign_process_to_all_spaces(pid_t pid);
 bool space_manager_is_window_on_active_space(struct window *window);

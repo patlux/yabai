@@ -702,44 +702,6 @@ void space_manager_move_window_to_space(uint64_t sid, struct window *window)
     }
 }
 
-static inline uint64_t space_manager_find_first_user_space_for_display(uint32_t did)
-{
-    int count;
-    uint64_t *space_list = display_space_list(did, &count);
-    if (!space_list) return 0;
-
-    for (int i = 0; i < count; ++i) {
-        uint64_t sid = space_list[i];
-
-        if (space_is_user(sid)) {
-            return sid;
-        }
-    }
-
-    return 0;
-}
-
-static inline bool space_manager_is_space_last_user_space(uint64_t sid)
-{
-    bool result = true;
-
-    int count;
-    uint64_t *space_list = display_space_list(space_display_id(sid), &count);
-    if (!space_list) return true;
-
-    for (int i = 0; i < count; ++i) {
-        uint64_t c_sid = space_list[i];
-        if (sid == c_sid) continue;
-
-        if (space_is_user(c_sid)) {
-            result = false;
-            break;
-        }
-    }
-
-    return result;
-}
-
 static enum space_op_error space_manager_swap_space_with_space_on_display(uint32_t a_did, uint64_t a_sid, uint32_t b_did, uint64_t b_sid)
 {
     if (display_manager_display_is_animating(a_did)) return SPACE_OP_ERROR_DISPLAY_IS_ANIMATING;
@@ -801,117 +763,8 @@ enum space_op_error space_manager_swap_space_with_space(uint64_t acting_sid, uin
     if (acting_sid == selector_sid) return SPACE_OP_ERROR_SAME_SPACE;
     if (acting_did != selector_did) return space_manager_swap_space_with_space_on_display(acting_did, acting_sid, selector_did, selector_sid);
 
-    bool is_animating = display_manager_display_is_animating(acting_did);
-    if (is_animating) return SPACE_OP_ERROR_DISPLAY_IS_ANIMATING;
-
-    uint64_t acting_prev_sid = space_manager_prev_space(acting_sid);
-    uint64_t selector_prev_sid = space_manager_prev_space(selector_sid);
-
-    uint32_t acting_prev_did = acting_prev_sid ? space_display_id(acting_prev_sid) : 0;
-    uint32_t selector_prev_did = selector_prev_sid ? space_display_id(selector_prev_sid) : 0;
-
-    bool acting_sid_is_first = !acting_prev_sid || acting_prev_did != acting_did;
-    bool selector_sid_is_first = !selector_prev_sid || selector_prev_did != selector_did;
-
-    int acting_mci = space_manager_mission_control_index(acting_sid);
-    int selector_mci = space_manager_mission_control_index(selector_sid);
-    bool success = true;
-
-    if (acting_sid_is_first && !selector_sid_is_first && selector_mci - acting_mci == 1) {
-        success = scripting_addition_move_space_after_space(acting_sid, selector_sid, acting_sid == space_manager_active_space());
-    } else if (!acting_sid_is_first && selector_sid_is_first && acting_mci - selector_mci == 1) {
-        success = scripting_addition_move_space_after_space(selector_sid, acting_sid, selector_sid == space_manager_active_space());
-    } else if (acting_sid_is_first && !selector_sid_is_first) {
-        success  = scripting_addition_move_space_after_space(selector_sid, acting_sid, false);
-        success &= scripting_addition_move_space_after_space(acting_sid, selector_prev_sid, acting_sid == space_manager_active_space());
-    } else if (!acting_sid_is_first && selector_sid_is_first) {
-        success  = scripting_addition_move_space_after_space(acting_sid, selector_sid, acting_sid == space_manager_active_space());
-        success &= scripting_addition_move_space_after_space(selector_sid, acting_prev_sid, false);
-    } else if (!acting_sid_is_first && !selector_sid_is_first) {
-        if (acting_mci > selector_mci) {
-            success  = scripting_addition_move_space_after_space(selector_sid, acting_sid, false);
-            success &= scripting_addition_move_space_after_space(acting_sid, selector_prev_sid, acting_sid == space_manager_active_space());
-        } else {
-            success  = scripting_addition_move_space_after_space(acting_sid, selector_sid, acting_sid == space_manager_active_space());
-            success &= scripting_addition_move_space_after_space(selector_sid, acting_prev_sid, false);
-        }
-    }
-
-    return success ? SPACE_OP_ERROR_SUCCESS : SPACE_OP_ERROR_SCRIPTING_ADDITION;
-}
-
-enum space_op_error space_manager_move_space_to_space(uint64_t acting_sid, uint64_t selector_sid)
-{
-    bool is_in_mc = mission_control_is_active();
-    if (is_in_mc) return SPACE_OP_ERROR_IN_MISSION_CONTROL;
-
-    uint32_t acting_did = space_display_id(acting_sid);
-    uint32_t selector_did = space_display_id(selector_sid);
-
-    if (acting_sid == selector_sid) return SPACE_OP_ERROR_SAME_SPACE;
-    if (acting_did != selector_did) return SPACE_OP_ERROR_SAME_DISPLAY;
-
-    bool is_animating = display_manager_display_is_animating(acting_did);
-    if (is_animating) return SPACE_OP_ERROR_DISPLAY_IS_ANIMATING;
-
-    uint64_t acting_prev_sid = space_manager_prev_space(acting_sid);
-    uint64_t selector_prev_sid = space_manager_prev_space(selector_sid);
-
-    uint32_t acting_prev_did = acting_prev_sid ? space_display_id(acting_prev_sid) : 0;
-    uint32_t selector_prev_did = selector_prev_sid ? space_display_id(selector_prev_sid) : 0;
-
-    bool acting_sid_is_first = !acting_prev_sid || acting_prev_did != acting_did;
-    bool selector_sid_is_first = !selector_prev_sid || selector_prev_did != selector_did;
-    bool success = true;
-
-    if (acting_sid_is_first && !selector_sid_is_first) {
-        success = scripting_addition_move_space_after_space(acting_sid, selector_sid, acting_sid == space_manager_active_space());
-    } else if (!acting_sid_is_first && selector_sid_is_first) {
-        success  = scripting_addition_move_space_after_space(acting_sid, selector_sid, acting_sid == space_manager_active_space());
-        success &= scripting_addition_move_space_after_space(selector_sid, acting_sid, false);
-    } else if (!acting_sid_is_first && !selector_sid_is_first) {
-        if (space_manager_mission_control_index(acting_sid) > space_manager_mission_control_index(selector_sid)) {
-            success = scripting_addition_move_space_after_space(acting_sid, selector_prev_sid, acting_sid == space_manager_active_space());
-        } else {
-            success = scripting_addition_move_space_after_space(acting_sid, selector_sid, acting_sid == space_manager_active_space());
-        }
-    }
-
-    return success ? SPACE_OP_ERROR_SUCCESS : SPACE_OP_ERROR_SCRIPTING_ADDITION;
-}
-
-enum space_op_error space_manager_move_space_to_display(struct space_manager *sm, uint64_t sid, uint32_t did)
-{
-    bool is_in_mc = mission_control_is_active();
-    if (is_in_mc) return SPACE_OP_ERROR_IN_MISSION_CONTROL;
-    if (!sid)     return SPACE_OP_ERROR_MISSING_SRC;
-
-    uint32_t s_did = space_display_id(sid);
-    if (s_did == did) return SPACE_OP_ERROR_INVALID_DST;
-
-    bool is_src_animating = display_manager_display_is_animating(s_did);
-    if (is_src_animating) return SPACE_OP_ERROR_DISPLAY_IS_ANIMATING;
-
-    bool last_space = space_manager_is_space_last_user_space(sid);
-    if (last_space) return SPACE_OP_ERROR_INVALID_SRC;
-
-    bool is_dst_animating = display_manager_display_is_animating(did);
-    if (is_dst_animating) return SPACE_OP_ERROR_DISPLAY_IS_ANIMATING;
-
-    uint64_t d_sid = display_space_id(did);
-    if (!d_sid) return SPACE_OP_ERROR_MISSING_DST;
-
-    bool focus_space = sid == space_manager_active_space();
-
-    if (scripting_addition_move_space_to_display(sid, d_sid,  focus_space ? space_manager_prev_space(sid) : 0, focus_space ? 1 : 0)) {
-        space_manager_mark_view_invalid(sm, sid);
-        if (focus_space) {
-            space_manager_focus_space(sid);
-        }
-        return SPACE_OP_ERROR_SUCCESS;
-    }
-
-    return SPACE_OP_ERROR_SCRIPTING_ADDITION;
+    // NOTE: Reordering spaces on a single display requires the scripting-addition, so only spaces on different displays can be swapped.
+    return SPACE_OP_ERROR_SAME_DISPLAY;
 }
 
 #pragma clang diagnostic push
@@ -1030,44 +883,7 @@ enum space_op_error space_manager_switch_space(uint64_t sid)
         return SPACE_OP_ERROR_SUCCESS;
     }
 
-    return scripting_addition_focus_space(sid) ? SPACE_OP_ERROR_SUCCESS : SPACE_OP_ERROR_SCRIPTING_ADDITION;
-}
-
-enum space_op_error space_manager_destroy_space(uint64_t sid)
-{
-    bool is_in_mc = mission_control_is_active();
-    if (is_in_mc) return SPACE_OP_ERROR_IN_MISSION_CONTROL;
-
-    if (!sid) return SPACE_OP_ERROR_MISSING_SRC;
-    if (!space_is_user(sid)) return SPACE_OP_ERROR_INVALID_TYPE;
-    if (space_manager_is_space_last_user_space(sid)) return SPACE_OP_ERROR_INVALID_SRC;
-
-    uint32_t did = space_display_id(sid);
-    uint64_t first_sid = space_manager_find_first_user_space_for_display(did);
-
-    bool is_animating = display_manager_display_is_animating(did);
-    if (is_animating) return SPACE_OP_ERROR_DISPLAY_IS_ANIMATING;
-
-    bool success = scripting_addition_destroy_space(sid);
-    if (!success) return SPACE_OP_ERROR_SCRIPTING_ADDITION;
-
-    if (first_sid) {
-        window_manager_validate_and_check_for_windows_on_space(&g_space_manager, &g_window_manager, first_sid);
-    }
-
-    return SPACE_OP_ERROR_SUCCESS;
-}
-
-enum space_op_error space_manager_add_space(uint64_t sid)
-{
-    bool is_in_mc = mission_control_is_active();
-    if (is_in_mc) return SPACE_OP_ERROR_IN_MISSION_CONTROL;
-    if (!sid)     return SPACE_OP_ERROR_MISSING_SRC;
-
-    bool is_animating = display_manager_display_is_animating(space_display_id(sid));
-    if (is_animating) return SPACE_OP_ERROR_DISPLAY_IS_ANIMATING;
-
-    return scripting_addition_create_space(sid) ? SPACE_OP_ERROR_SUCCESS : SPACE_OP_ERROR_SCRIPTING_ADDITION;
+    return space_manager_focus_space(sid);
 }
 
 void space_manager_assign_process_to_space(pid_t pid, uint64_t sid)

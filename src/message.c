@@ -83,18 +83,13 @@ extern bool g_verbose;
 
 /* --------------------------------DOMAIN DISPLAY------------------------------- */
 #define COMMAND_DISPLAY_FOCUS "--focus"
-#define COMMAND_DISPLAY_SPACE "--space"
 #define COMMAND_DISPLAY_LABEL "--label"
 /* ----------------------------------------------------------------------------- */
 
 /* --------------------------------DOMAIN SPACE--------------------------------- */
 #define COMMAND_SPACE_FOCUS    "--focus"
 #define COMMAND_SPACE_SWITCH   "--switch"
-#define COMMAND_SPACE_CREATE   "--create"
-#define COMMAND_SPACE_DESTROY  "--destroy"
-#define COMMAND_SPACE_MOVE     "--move"
 #define COMMAND_SPACE_SWAP     "--swap"
-#define COMMAND_SPACE_DISPLAY  "--display"
 #define COMMAND_SPACE_EQUALIZE "--equalize"
 #define COMMAND_SPACE_BALANCE  "--balance"
 #define COMMAND_SPACE_MIRROR   "--mirror"
@@ -1593,20 +1588,6 @@ static void handle_domain_display(FILE *rsp, struct token domain, char *message)
                 daemon_fail(rsp, "cannot focus an already focused display.\n");
             }
         }
-    } else if (token_equals(command, COMMAND_DISPLAY_SPACE)) {
-        struct selector selector = parse_space_selector(rsp, &message, display_space_id(acting_did), false);
-        if (selector.did_parse && selector.sid) {
-            enum space_op_error result = display_manager_focus_space(acting_did, selector.sid);
-            if (result == SPACE_OP_ERROR_SAME_DISPLAY) {
-                daemon_fail(rsp, "acting display does not contain the given space.\n");
-            } else if (result == SPACE_OP_ERROR_DISPLAY_IS_ANIMATING) {
-                daemon_fail(rsp, "cannot focus space because the display is in the middle of an animation.\n");
-            } else if (result == SPACE_OP_ERROR_IN_MISSION_CONTROL) {
-                daemon_fail(rsp, "cannot focus space because mission-control is active.\n");
-            } else if (result == SPACE_OP_ERROR_SCRIPTING_ADDITION) {
-                daemon_fail(rsp, "cannot focus space due to an error with the scripting-addition.\n");
-            }
-        }
     } else if (token_equals(command, COMMAND_DISPLAY_LABEL)) {
         char *label;
         if (parse_label(rsp, get_token(&message), LABEL_DISPLAY, &label)) {
@@ -1672,22 +1653,8 @@ static void handle_domain_space(FILE *rsp, struct token domain, char *message)
                     daemon_fail(rsp, "cannot focus space because mission-control is active.\n");
                 } else if (result == SPACE_OP_ERROR_SCRIPTING_ADDITION) {
                     daemon_fail(rsp, "cannot focus space due to an error with the scripting-addition.\n");
-                }
-            }
-        } else if (token_equals(command, COMMAND_SPACE_MOVE)) {
-            struct selector selector = parse_space_selector(rsp, &message, acting_sid, false);
-            if (selector.did_parse && selector.sid) {
-                enum space_op_error result = space_manager_move_space_to_space(acting_sid, selector.sid);
-                if (result == SPACE_OP_ERROR_SAME_SPACE) {
-                    daemon_fail(rsp, "cannot move space to itself.\n");
-                } else if (result == SPACE_OP_ERROR_SAME_DISPLAY) {
-                    daemon_fail(rsp, "cannot move space across display boundaries. use --display instead.\n");
-                } else if (result == SPACE_OP_ERROR_DISPLAY_IS_ANIMATING) {
-                    daemon_fail(rsp, "cannot move space because the display is in the middle of an animation.\n");
-                } else if (result == SPACE_OP_ERROR_IN_MISSION_CONTROL) {
-                    daemon_fail(rsp, "cannot move space because mission-control is active.\n");
-                } else if (result == SPACE_OP_ERROR_SCRIPTING_ADDITION) {
-                    daemon_fail(rsp, "cannot move space due to an error with the scripting-addition.\n");
+                } else if (result == SPACE_OP_ERROR_GESTURE) {
+                    daemon_fail(rsp, "cannot focus space: could not construct the desktop-switching gesture.\n");
                 }
             }
         } else if (token_equals(command, COMMAND_SPACE_SWAP)) {
@@ -1696,6 +1663,8 @@ static void handle_domain_space(FILE *rsp, struct token domain, char *message)
                 enum space_op_error result = space_manager_swap_space_with_space(acting_sid, selector.sid);
                 if (result == SPACE_OP_ERROR_SAME_SPACE) {
                     daemon_fail(rsp, "cannot swap space with itself.\n");
+                } else if (result == SPACE_OP_ERROR_SAME_DISPLAY) {
+                    daemon_fail(rsp, "cannot swap spaces on the same display; only spaces on different displays can be swapped.\n");
                 } else if (result == SPACE_OP_ERROR_DISPLAY_IS_ANIMATING) {
                     daemon_fail(rsp, "cannot swap space because the display is in the middle of an animation.\n");
                 } else if (result == SPACE_OP_ERROR_IN_MISSION_CONTROL) {
@@ -1703,72 +1672,6 @@ static void handle_domain_space(FILE *rsp, struct token domain, char *message)
                 } else if (result == SPACE_OP_ERROR_SCRIPTING_ADDITION) {
                     daemon_fail(rsp, "cannot swap space due to an error with the scripting-addition.\n");
                 }
-            }
-        } else if (token_equals(command, COMMAND_SPACE_DISPLAY)) {
-            struct selector selector = parse_display_selector(rsp, &message, display_manager_active_display_id(), false);
-            if (selector.did_parse && selector.did) {
-                enum space_op_error result = space_manager_move_space_to_display(&g_space_manager, acting_sid, selector.did);
-                if (result == SPACE_OP_ERROR_MISSING_SRC) {
-                    daemon_fail(rsp, "could not locate the space to act on.\n");
-                } else if (result == SPACE_OP_ERROR_MISSING_DST) {
-                    daemon_fail(rsp, "could not locate the active space of the given display.\n");
-                } else if (result == SPACE_OP_ERROR_INVALID_SRC) {
-                    daemon_fail(rsp, "acting space is the last user-space on the source display and cannot be moved.\n");
-                } else if (result == SPACE_OP_ERROR_INVALID_DST) {
-                    daemon_fail(rsp, "acting space is already located on the given display.\n");
-                } else if (result == SPACE_OP_ERROR_DISPLAY_IS_ANIMATING) {
-                    daemon_fail(rsp, "cannot send space to display because it is in the middle of an animation.\n");
-                } else if (result == SPACE_OP_ERROR_IN_MISSION_CONTROL) {
-                    daemon_fail(rsp, "cannot send space to display because mission-control is active.\n");
-                } else if (result == SPACE_OP_ERROR_SCRIPTING_ADDITION) {
-                    daemon_fail(rsp, "cannot send space to display due to an error with the scripting-addition.\n");
-                }
-            }
-        } else if (token_equals(command, COMMAND_SPACE_CREATE)) {
-            struct selector selector = parse_display_selector(rsp, &message, display_manager_active_display_id(), true);
-
-            if (token_is_valid(selector.token)) {
-                if (selector.did_parse && selector.did) {
-                    acting_sid = display_space_id(selector.did);
-                } else {
-                    return;
-                }
-            }
-
-            enum space_op_error result = space_manager_add_space(acting_sid);
-            if (result == SPACE_OP_ERROR_MISSING_SRC) {
-                daemon_fail(rsp, "could not locate the space to act on.\n");
-            } else if (result == SPACE_OP_ERROR_DISPLAY_IS_ANIMATING) {
-                daemon_fail(rsp, "cannot create space because the display is in the middle of an animation.\n");
-            } else if (result == SPACE_OP_ERROR_IN_MISSION_CONTROL) {
-                daemon_fail(rsp, "cannot create space because mission-control is active.\n");
-            } else if (result == SPACE_OP_ERROR_SCRIPTING_ADDITION) {
-                daemon_fail(rsp, "cannot create space due to an error with the scripting-addition.\n");
-            }
-        } else if (token_equals(command, COMMAND_SPACE_DESTROY)) {
-            struct selector selector = parse_space_selector(rsp, &message, acting_sid, true);
-
-            if (token_is_valid(selector.token)) {
-                if (selector.did_parse && selector.sid) {
-                    acting_sid = selector.sid;
-                } else {
-                    return;
-                }
-            }
-
-            enum space_op_error result = space_manager_destroy_space(acting_sid);
-            if (result == SPACE_OP_ERROR_MISSING_SRC) {
-                daemon_fail(rsp, "could not locate the space to act on.\n");
-            } else if (result == SPACE_OP_ERROR_INVALID_SRC) {
-                daemon_fail(rsp, "acting space is the last user-space on the source display and cannot be destroyed.\n");
-            } else if (result == SPACE_OP_ERROR_INVALID_TYPE) {
-                daemon_fail(rsp, "cannot destroy a macOS fullscreen space.\n");
-            } else if (result == SPACE_OP_ERROR_DISPLAY_IS_ANIMATING) {
-                daemon_fail(rsp, "cannot destroy space because the display is in the middle of an animation.\n");
-            } else if (result == SPACE_OP_ERROR_IN_MISSION_CONTROL) {
-                daemon_fail(rsp, "cannot destroy space because mission-control is active.\n");
-            } else if (result == SPACE_OP_ERROR_SCRIPTING_ADDITION) {
-                daemon_fail(rsp, "cannot destroy space due to an error with the scripting-addition.\n");
             }
         } else if (token_equals(command, COMMAND_SPACE_EQUALIZE)) {
             struct token value = get_token(&message);

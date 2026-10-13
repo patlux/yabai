@@ -446,41 +446,6 @@ bool scripting_addition_focus_space(uint64_t sid)
     return sa_payload_send(SA_OPCODE_SPACE_FOCUS);
 }
 
-bool scripting_addition_create_space(uint64_t sid)
-{
-    sa_payload_init();
-    pack(sid);
-    return sa_payload_send(SA_OPCODE_SPACE_CREATE);
-}
-
-bool scripting_addition_destroy_space(uint64_t sid)
-{
-    sa_payload_init();
-    pack(sid);
-    return sa_payload_send(SA_OPCODE_SPACE_DESTROY);
-}
-
-bool scripting_addition_move_space_to_display(uint64_t src_sid, uint64_t dst_sid, uint64_t src_prev_sid, bool focus)
-{
-    sa_payload_init();
-    pack(src_sid);
-    pack(dst_sid);
-    pack(src_prev_sid);
-    pack(focus);
-    return sa_payload_send(SA_OPCODE_SPACE_MOVE);
-}
-
-bool scripting_addition_move_space_after_space(uint64_t src_sid, uint64_t dst_sid, bool focus)
-{
-    uint64_t dummy_sid = 0;
-    sa_payload_init();
-    pack(src_sid);
-    pack(dst_sid);
-    pack(dummy_sid);
-    pack(focus);
-    return sa_payload_send(SA_OPCODE_SPACE_MOVE);
-}
-
 bool scripting_addition_move_window(uint32_t wid, int x, int y)
 {
     sa_payload_init();

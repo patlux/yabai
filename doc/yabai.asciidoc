@@ -234,11 +234,6 @@ COMMAND
 *--focus* '<DISPLAY_SEL>'::
     Focus the given display.
 
-*--space* '<SPACE_SEL>'::
-    The given space will become visible on the selected display, without changing focus. +
-    The given space must belong to the selected display. +
-    System Integrity Protection must be partially disabled.
-
 *--label* ['<LABEL>']::
     Label the selected display, allowing that label to be used as an alias in commands that take a `DISPLAY_SEL` parameter. +
     If the command is called without an argument it will try to remove a previously assigned label.
@@ -261,33 +256,11 @@ COMMAND
     The selected space will always be the currently focused space. +
     The given space substitutes the selected space, gaining focus. +
     If the selected space and the given space belong to different displays, this behaves like '--swap'. +
-    If the selected space and the given space belong to the same display, this behaves like '--focus'. +
-    System Integrity Protection must be partially disabled.
-
-*--create*  ['<DISPLAY_SEL>']::
-    Create a new space on the given display. +
-    If none specified, use the display of the active space instead. +
-    System Integrity Protection must be partially disabled.
-
-*--destroy* ['<SPACE_SEL>']::
-    Remove the given space. +
-    If none specified, use the selected space instead. +
-    System Integrity Protection must be partially disabled.
-
-*--move* '<SPACE_SEL>'::
-    Move position of the selected space to the position of the given space. +
-    The selected space and given space must both belong to the same display. +
-    System Integrity Protection must be partially disabled.
+    If the selected space and the given space belong to the same display, this behaves like '--focus'.
 
 *--swap* '<SPACE_SEL>'::
-    Swap the selected space with the given space. +
-    If the selected space and given space belong to different displays, all the windows will swap. +
-    If the selected space and given space belong to the same display, the actual spaces will swap. +
-    System Integrity Protection must be partially disabled.
-
-*--display* '<DISPLAY_SEL>'::
-    Send the selected space to the given display. +
-    System Integrity Protection must be partially disabled.
+    Swap all windows of the selected space with the windows of the given space. +
+    The selected space and given space must belong to different displays.
 
 *--equalize* ['x-axis|y-axis']::
     Reset the split ratios on the selected space to the default value along the given axis. +
