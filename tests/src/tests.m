@@ -10,6 +10,7 @@ typedef TEST_SIG(function);
 #include "space_gesture.c"
 #include "window_ordered.c"
 #include "window_notifications.c"
+#include "window_removal.c"
 
 #define TEST_ENTRY(name) { #name, test_##name },
 #define TEST_LIST                                              \
@@ -24,7 +25,12 @@ typedef TEST_SIG(function);
     TEST_ENTRY(window_reordered_stays_tiled)                   \
     TEST_ENTRY(window_visible_event_while_still_ordered_out)   \
     TEST_ENTRY(macos_version_newer_than_listed)                \
-    TEST_ENTRY(window_notification_list_includes_every_tracked_window)
+    TEST_ENTRY(window_notification_list_includes_every_tracked_window) \
+    TEST_ENTRY(window_removal_refreshes_left_survivor)          \
+    TEST_ENTRY(window_removal_refreshes_right_survivor)         \
+    TEST_ENTRY(window_removal_refreshes_subtree_without_balancing) \
+    TEST_ENTRY(window_removal_keeps_explicit_auto_balance)      \
+    TEST_ENTRY(window_removal_refreshes_entire_tree)
 
 static struct {
     char *name;

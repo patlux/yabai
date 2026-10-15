@@ -720,11 +720,15 @@ struct window_node *view_remove_window_node(struct view *view, struct window *wi
 
     if (view->auto_balance != SPLIT_NONE) {
         window_node_balance(view->root, view->auto_balance);
-        view_update(view);
-        return view->root;
     }
 
-    return parent;
+    // The cached parent area can predate a change to the usable display bounds
+    // (for example the Dock). Refresh it even with auto_balance disabled, or a
+    // surviving window keeps that stale width until the space is refreshed.
+    // Every node can move when the root bounds change, so flush the whole tree.
+    // view_update preserves the user's split ratios; it does not balance them.
+    view_update(view);
+    return view->root;
 }
 
 void view_stack_window_node(struct window_node *node, struct window *window)
