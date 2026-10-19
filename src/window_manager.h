@@ -58,6 +58,7 @@ struct window_manager
     struct table window;
     struct table managed_window;
     struct table window_lost_focused_event;
+    struct table window_adopt_attempted;
     struct table application_lost_front_switched_event;
     struct table insert_feedback;
     struct rule *rules;
@@ -132,7 +133,7 @@ void window_manager_add_lost_front_switched_event(struct window_manager *wm, pid
 bool window_manager_find_lost_focused_event(struct window_manager *wm, uint32_t window_id);
 void window_manager_remove_lost_focused_event(struct window_manager *wm, uint32_t window_id);
 void window_manager_add_lost_focused_event(struct window_manager *wm, uint32_t window_id);
-bool window_manager_adopt_missed_window(struct window_manager *wm, uint32_t window_id);
+bool window_manager_adopt_missed_window(struct window_manager *wm, struct application *application, uint32_t window_id);
 struct window *window_manager_find_window(struct window_manager *wm, uint32_t window_id);
 void window_manager_remove_window(struct window_manager *wm, uint32_t window_id);
 void window_manager_add_window(struct window_manager *wm, struct window *window);

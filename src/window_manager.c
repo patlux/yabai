@@ -432,7 +432,16 @@ bool window_manager_refresh_window_ref(struct window *window)
         window_unobserve(window);
         CFRelease(window->ref);
         window->ref = CFRetain(fresh_ref);
-        window_observe(window);
+
+        //
+        // NOTE(idvorkin): A notification the fresh element refuses is logged and the element kept: the stale one gets
+        // no notifications at all, and the window lives on, so it cannot be dropped the way an unobservable new
+        // window is in window_manager_create_and_add_window.
+        //
+
+        if (!window_observe(window)) {
+            debug("%s: could not observe every notification for %s %d\n", __FUNCTION__, window->application->name, window->id);
+        }
     }
 
     CFRelease(window_list);
@@ -491,7 +500,7 @@ void window_manager_animate_window(struct window_capture capture)
     window_manager_set_window_frame(capture.window, capture.x, capture.y, capture.w, capture.h);
 }
 
-void window_manager_set_window_frame(struct window *window, float x, float y, float width, float height)
+static AXError window_manager_set_window_frame_internal(struct window *window, float x, float y, float width, float height)
 {
     //
     // NOTE(asmvik): Attempting to check the window frame cache to prevent unnecessary movement and resize calls to the AX API
@@ -527,9 +536,13 @@ void window_manager_set_window_frame(struct window *window, float x, float y, fl
         }
     });
 
-    // NOTE(idvorkin): The retry cannot loop: a second refresh finds the element it just swapped in and returns false.
-    if (result == kAXErrorInvalidUIElement && window_manager_refresh_window_ref(window)) {
-        window_manager_set_window_frame(window, x, y, width, height);
+    return result;
+}
+
+void window_manager_set_window_frame(struct window *window, float x, float y, float width, float height)
+{
+    if (window_manager_set_window_frame_internal(window, x, y, width, height) == kAXErrorInvalidUIElement && window_manager_refresh_window_ref(window)) {
+        window_manager_set_window_frame_internal(window, x, y, width, height);
     }
 }
 
@@ -1036,18 +1049,23 @@ void window_manager_add_lost_focused_event(struct window_manager *wm, uint32_t w
 // arrives (a Google Chat web app window on macOS 27), the window is never tracked: it covers the tiles until yabai
 // restarts, which is when it is found. Its application still reports it as the focused window once it is clicked,
 // so treat that as the creation we missed. A real creation still in the queue is harmless: WINDOW_CREATED ignores a
-// window it already tracks.
+// window it already tracks. Each window is tried once: one that window_manager_create_and_add_window rejects (an
+// AXUnknown panel) would otherwise be built and destroyed again on every focus change. Going through WINDOW_CREATED
+// means an adopted window fires window_created, which yabai never fired for it, and takes a one-shot rule it matches.
 //
 
-bool window_manager_adopt_missed_window(struct window_manager *wm, uint32_t window_id)
+bool window_manager_adopt_missed_window(struct window_manager *wm, struct application *application, uint32_t window_id)
 {
-    int connection = 0;
-    pid_t pid = 0;
-    SLSGetWindowOwner(g_connection, window_id, &connection);
-    SLSConnectionGetPID(connection, &pid);
+    if (!application) {
+        int connection = 0;
+        pid_t pid = 0;
+        SLSGetWindowOwner(g_connection, window_id, &connection);
+        SLSConnectionGetPID(connection, &pid);
+        application = window_manager_find_application(wm, pid);
+    }
 
-    struct application *application = window_manager_find_application(wm, pid);
     if (!application) return false;
+    if (table_find(&wm->window_adopt_attempted, &window_id)) return false;
 
     CFTypeRef window_ref = NULL;
     AXUIElementCopyAttributeValue(application->ref, kAXFocusedWindowAttribute, &window_ref);
@@ -1059,6 +1077,7 @@ bool window_manager_adopt_missed_window(struct window_manager *wm, uint32_t wind
     }
 
     debug("%s: %s %d\n", __FUNCTION__, application->name, window_id);
+    table_add(&wm->window_adopt_attempted, &window_id, (void *)(intptr_t) 1);
     event_loop_post(&g_event_loop, WINDOW_CREATED, (void *) window_ref, 0);
     return true;
 }
@@ -2229,6 +2248,7 @@ void window_manager_init(struct window_manager *wm)
     table_init(&wm->window, 150, hash_wm, compare_wm);
     table_init(&wm->managed_window, 150, hash_wm, compare_wm);
     table_init(&wm->window_lost_focused_event, 150, hash_wm, compare_wm);
+    table_init(&wm->window_adopt_attempted, 150, hash_wm, compare_wm);
     table_init(&wm->application_lost_front_switched_event, 150, hash_wm, compare_wm);
     table_init(&wm->insert_feedback, 150, hash_wm, compare_wm);
 }

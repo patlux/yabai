@@ -8,6 +8,11 @@ TEST_FUNC(window_adopt_skips_a_window_no_application_owns,
         table_init(&g_window_manager.application, 150, hash_wm, compare_wm);
     }
 
+    if (!g_window_manager.window_adopt_attempted.buckets) {
+        table_init(&g_window_manager.window_adopt_attempted, 150, hash_wm, compare_wm);
+    }
+
     g_connection = SLSMainConnectionID();
-    TEST_CHECK(window_manager_adopt_missed_window(&g_window_manager, TEST_ADOPT_WID), false);
+    TEST_CHECK(window_manager_adopt_missed_window(&g_window_manager, NULL, TEST_ADOPT_WID), false);
+    TEST_CHECK(table_find(&g_window_manager.window_adopt_attempted, &(uint32_t){TEST_ADOPT_WID}) == NULL, true);
 });
