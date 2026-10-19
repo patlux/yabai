@@ -12,6 +12,7 @@ typedef TEST_SIG(function);
 #include "window_notifications.c"
 #include "window_removal.c"
 #include "mouse_feedback.c"
+#include "window_ref.c"
 
 #define TEST_ENTRY(name) { #name, test_##name },
 #define TEST_LIST                                              \
@@ -36,7 +37,8 @@ typedef TEST_SIG(function);
     TEST_ENTRY(mouse_up_without_window_clears_feedback)         \
     TEST_ENTRY(mouse_up_with_invalid_window_clears_feedback)    \
     TEST_ENTRY(mouse_drag_with_invalid_window_clears_feedback)  \
-    TEST_ENTRY(window_removal_forgets_feedback_node)
+    TEST_ENTRY(window_removal_forgets_feedback_node)           \
+    TEST_ENTRY(window_ref_kept_when_the_application_has_no_such_window)
 
 static struct {
     char *name;

@@ -405,24 +405,74 @@ enum window_op_error window_manager_resize_window_relative(struct window_manager
     return WINDOW_OP_ERROR_SUCCESS;
 }
 
-void window_manager_move_window(struct window *window, float x, float y)
+//
+// NOTE(idvorkin): The AXUIElementRef we keep for a window can go stale while the window lives on (Slack, macOS 27):
+// every move and resize then fails with kAXErrorInvalidUIElement, so the window never goes where its tile is, while
+// the application-level notifications, which are matched by window id, keep arriving. Find the window again in its
+// application's window list and swap in the element found there.
+//
+
+bool window_manager_refresh_window_ref(struct window *window)
+{
+    CFArrayRef window_list = application_window_list(window->application);
+    if (!window_list) return false;
+
+    AXUIElementRef fresh_ref = NULL;
+    for (int i = 0; i < CFArrayGetCount(window_list); ++i) {
+        AXUIElementRef window_ref = CFArrayGetValueAtIndex(window_list, i);
+        if (ax_window_id(window_ref) == window->id) {
+            fresh_ref = window_ref;
+            break;
+        }
+    }
+
+    bool result = fresh_ref && !CFEqual(fresh_ref, window->ref);
+    if (result) {
+        debug("%s: %s %d\n", __FUNCTION__, window->application->name, window->id);
+        window_unobserve(window);
+        CFRelease(window->ref);
+        window->ref = CFRetain(fresh_ref);
+        window_observe(window);
+    }
+
+    CFRelease(window_list);
+    return result;
+}
+
+static AXError window_manager_move_window_internal(struct window *window, float x, float y)
 {
     CGPoint position = CGPointMake(x, y);
     CFTypeRef position_ref = AXValueCreate(kAXValueTypeCGPoint, (void *) &position);
-    if (!position_ref) return;
+    if (!position_ref) return kAXErrorFailure;
 
-    AXUIElementSetAttributeValue(window->ref, kAXPositionAttribute, position_ref);
+    AXError result = AXUIElementSetAttributeValue(window->ref, kAXPositionAttribute, position_ref);
     CFRelease(position_ref);
+    return result;
+}
+
+void window_manager_move_window(struct window *window, float x, float y)
+{
+    if (window_manager_move_window_internal(window, x, y) == kAXErrorInvalidUIElement && window_manager_refresh_window_ref(window)) {
+        window_manager_move_window_internal(window, x, y);
+    }
+}
+
+static AXError window_manager_resize_window_internal(struct window *window, float width, float height)
+{
+    CGSize size = CGSizeMake(width, height);
+    CFTypeRef size_ref = AXValueCreate(kAXValueTypeCGSize, (void *) &size);
+    if (!size_ref) return kAXErrorFailure;
+
+    AXError result = AXUIElementSetAttributeValue(window->ref, kAXSizeAttribute, size_ref);
+    CFRelease(size_ref);
+    return result;
 }
 
 void window_manager_resize_window(struct window *window, float width, float height)
 {
-    CGSize size = CGSizeMake(width, height);
-    CFTypeRef size_ref = AXValueCreate(kAXValueTypeCGSize, (void *) &size);
-    if (!size_ref) return;
-
-    AXUIElementSetAttributeValue(window->ref, kAXSizeAttribute, size_ref);
-    CFRelease(size_ref);
+    if (window_manager_resize_window_internal(window, width, height) == kAXErrorInvalidUIElement && window_manager_refresh_window_ref(window)) {
+        window_manager_resize_window_internal(window, width, height);
+    }
 }
 
 void window_manager_animate_window_list(struct window_capture *window_list, int window_count)
@@ -453,6 +503,8 @@ void window_manager_set_window_frame(struct window *window, float x, float y, fl
     // track changes to the window frame in real-time without delay.
     //
 
+    AXError result = kAXErrorSuccess;
+
     AX_ENHANCED_UI_WORKAROUND(window->application->ref, {
         CGPoint position = CGPointMake(x, y);
         CFTypeRef position_ref = AXValueCreate(kAXValueTypeCGPoint, (void *) &position);
@@ -464,7 +516,7 @@ void window_manager_set_window_frame(struct window *window, float x, float y, fl
         if (size_ref) AXUIElementSetAttributeValue(window->ref, kAXSizeAttribute, size_ref);
 
         if (position_ref) {
-            AXUIElementSetAttributeValue(window->ref, kAXPositionAttribute, position_ref);
+            result = AXUIElementSetAttributeValue(window->ref, kAXPositionAttribute, position_ref);
             CFRelease(position_ref);
         }
 
@@ -474,6 +526,11 @@ void window_manager_set_window_frame(struct window *window, float x, float y, fl
             CFRelease(size_ref);
         }
     });
+
+    // NOTE(idvorkin): The retry cannot loop: a second refresh finds the element it just swapped in and returns false.
+    if (result == kAXErrorInvalidUIElement && window_manager_refresh_window_ref(window)) {
+        window_manager_set_window_frame(window, x, y, width, height);
+    }
 }
 
 void window_manager_set_menubar_opacity(struct window_manager *wm, float opacity)
