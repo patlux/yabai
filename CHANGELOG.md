@@ -11,6 +11,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - *space --swap* only swaps spaces on different displays; *space --switch* on the same display now behaves like *space --focus*
 
 ### Changed
+- A stack holds at most 32 windows: a window past that on a space with *layout stack* stays out of the layout, and a window meant for a full stack after *window --insert stack* gets a tile of its own instead of being written past the end of the node
+- Re-find a window whose accessibility element went stale and retry the move or resize once, instead of leaving it outside its tile until yabai restarts
+- Track a window as created when its application reports it as focused but its creation notification never arrived
 - A window dragged onto another display stays out of the destination layout until the mouse is released, and the display it left is flushed at once instead of keeping a gap [#2843](https://github.com/asmvik/yabai/issues/2843)
 - Track windows that an application restores on an inactive space while it launches [#2765](https://github.com/asmvik/yabai/issues/2765)
 - Every mouse-up removes the insert feedback of a window drag, also for drops without a target window, drops that resized the window and windows that became invalid; window removal no longer leaves the mouse state on a freed node

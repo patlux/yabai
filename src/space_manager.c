@@ -446,7 +446,8 @@ struct view *space_manager_tile_window_on_space_with_insertion_point(struct spac
     if (view->layout == VIEW_FLOAT) return view;
 
     struct window_node *node = view_add_window_node_with_insertion_point(view, window, insertion_point);
-    assert(node);
+    // A full stack layout leaves the window out of the layout, like a float space.
+    if (!node) return view;
 
     if (space_is_visible(view->sid)) {
         window_node_flush(node);
