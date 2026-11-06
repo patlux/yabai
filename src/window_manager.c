@@ -1995,6 +1995,13 @@ static void window_manager_check_for_windows_on_space(struct window_manager *wm,
         if (existing_view && existing_view->layout != VIEW_FLOAT && existing_view != view) {
 
             //
+            // NOTE: A window dragged onto another display appears in its window list before the
+            // mouse is released. Leave it for MOUSE_UP to drop, rather than re-tiling under the cursor.
+            //
+
+            if (window == g_mouse_state.window) continue;
+
+            //
             // @cleanup
             //
             // :AXBatching
@@ -2006,7 +2013,18 @@ static void window_manager_check_for_windows_on_space(struct window_manager *wm,
 
             view_remove_window_node(existing_view, window);
             window_manager_remove_managed_window(wm, window->id);
-            view_set_flag(existing_view, VIEW_IS_DIRTY);
+
+            //
+            // NOTE: Our caller flushes only the view being checked. Flush the view the window left
+            // when it is visible on another display, or it keeps a gap until its space is refreshed.
+            //
+
+            if (space_is_visible(existing_view->sid)) {
+                window_node_flush(existing_view->root);
+                view_clear_flag(existing_view, VIEW_IS_DIRTY);
+            } else {
+                view_set_flag(existing_view, VIEW_IS_DIRTY);
+            }
         }
 
         if (!existing_view || (existing_view->layout != VIEW_FLOAT && existing_view != view)) {

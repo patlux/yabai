@@ -180,3 +180,35 @@ TEST_FUNC(macos_version_newer_than_listed,
     TEST_CHECK(workspace_is_macos_bigsur(), false);
     TEST_CHECK(workspace_is_macos_tahoe(), false);
 });
+
+// A window dragged onto another display appears in that space's window list
+// before the mouse is released. The space check must leave it to MOUSE_UP
+// instead of tiling it under the cursor; once released, the check moves it.
+#define TEST_ORDERED_DST_SID 0x7ffffff3ULL
+
+TEST_FUNC(window_dragged_to_other_space_waits_for_mouse_up,
+{
+    struct test_ordered t;
+    test_ordered_init(&t);
+
+    struct view dst = {0};
+    struct window_node dst_root = {0};
+    dst.sid = TEST_ORDERED_DST_SID;
+    dst.root = &dst_root;
+    dst.layout = VIEW_BSP;
+    uint32_t wid = t.a.id;
+
+    g_mouse_state.window = &t.a;
+    window_manager_check_for_windows_on_space(&g_window_manager, &dst, &wid, 1);
+    TEST_CHECK(window_manager_find_managed_window(&g_window_manager, &t.a) == t.view, true);
+    TEST_CHECK(view_find_window_node(t.view, t.a.id) != NULL, true);
+    TEST_CHECK(view_find_window_node(&dst, t.a.id) == NULL, true);
+
+    g_mouse_state.window = NULL;
+    window_manager_check_for_windows_on_space(&g_window_manager, &dst, &wid, 1);
+    TEST_CHECK(window_manager_find_managed_window(&g_window_manager, &t.a) == &dst, true);
+    TEST_CHECK(view_find_window_node(t.view, t.a.id) == NULL, true);
+    TEST_CHECK(view_find_window_node(&dst, t.a.id) != NULL, true);
+
+    test_ordered_free(&t);
+});

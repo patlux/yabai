@@ -23,6 +23,7 @@ typedef TEST_SIG(function);
     TEST_ENTRY(window_ordered_out_stays_unmanaged)             \
     TEST_ENTRY(window_ordered_in_is_tiled_again)               \
     TEST_ENTRY(window_ordered_in_keeps_float)                  \
+    TEST_ENTRY(window_dragged_to_other_space_waits_for_mouse_up) \
     TEST_ENTRY(window_reordered_stays_tiled)                   \
     TEST_ENTRY(window_visible_event_while_still_ordered_out)   \
     TEST_ENTRY(macos_version_newer_than_listed)                \
