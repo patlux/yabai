@@ -225,6 +225,16 @@ void mouse_drop_no_target(struct space_manager *sm, struct window_manager *wm, s
     }
 }
 
+void mouse_drop_clear_feedback(struct mouse_state *ms)
+{
+    struct window_node *node = ms->feedback_node;
+    if (!node) return;
+
+    node->insert_dir = 0;
+    insert_feedback_destroy(node);
+    ms->feedback_node = NULL;
+}
+
 void mouse_drop_try_adjust_bsp_grid(struct window_manager *wm, struct view *view, struct window *window, struct mouse_window_info *info)
 {
     bool success = true;

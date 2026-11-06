@@ -1228,11 +1228,7 @@ static EVENT_HANDLER(MOUSE_UP)
         struct window_node *b_node = window ? view_find_window_node(dst_view, window->id) : NULL;
 
         if (a_node && b_node && a_node != b_node) {
-            if (g_mouse_state.feedback_node) {
-                g_mouse_state.feedback_node->insert_dir = 0;
-                insert_feedback_destroy(g_mouse_state.feedback_node);
-                g_mouse_state.feedback_node = NULL;
-            }
+            mouse_drop_clear_feedback(&g_mouse_state);
 
             enum mouse_drop_action drop_action = mouse_determine_drop_action(&g_mouse_state, a_node, window, point);
             switch (drop_action) {
@@ -1268,6 +1264,9 @@ static EVENT_HANDLER(MOUSE_UP)
 err:
     g_mouse_state.window = NULL;
 res:
+    // Drops without a target, drops that resized the window and invalidated
+    // windows skip the branch above. Clear the feedback for every mouse-up.
+    mouse_drop_clear_feedback(&g_mouse_state);
     g_mouse_state.current_action = MOUSE_MODE_NONE;
 out:
     CFRelease(context);
@@ -1280,6 +1279,7 @@ static EVENT_HANDLER(MOUSE_DRAGGED)
 
     if (!__sync_bool_compare_and_swap(&g_mouse_state.window->id_ptr, &g_mouse_state.window->id, &g_mouse_state.window->id)) {
         debug("%s: %d has been marked invalid by the system, ignoring event..\n", __FUNCTION__, g_mouse_state.window->id);
+        mouse_drop_clear_feedback(&g_mouse_state);
         g_mouse_state.window = NULL;
         g_mouse_state.current_action = MOUSE_MODE_NONE;
         CFRelease(context);
@@ -1332,9 +1332,8 @@ static EVENT_HANDLER(MOUSE_DRAGGED)
         struct window_node *b_node = window ? view_find_window_node(dst_view, window->id) : NULL;
 
         if (a_node && b_node && a_node != b_node) {
-            if (g_mouse_state.feedback_node && g_mouse_state.feedback_node != b_node) {
-                g_mouse_state.feedback_node->insert_dir = 0;
-                insert_feedback_destroy(g_mouse_state.feedback_node);
+            if (g_mouse_state.feedback_node != b_node) {
+                mouse_drop_clear_feedback(&g_mouse_state);
             }
 
             int insert_dir = 0;
@@ -1369,11 +1368,7 @@ static EVENT_HANDLER(MOUSE_DRAGGED)
                 g_mouse_state.feedback_node = b_node;
             }
         } else if (!b_node) {
-            if (g_mouse_state.feedback_node) {
-                g_mouse_state.feedback_node->insert_dir = 0;
-                insert_feedback_destroy(g_mouse_state.feedback_node);
-                g_mouse_state.feedback_node = NULL;
-            }
+            mouse_drop_clear_feedback(&g_mouse_state);
         }
     }
 

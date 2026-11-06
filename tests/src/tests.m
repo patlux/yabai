@@ -11,6 +11,7 @@ typedef TEST_SIG(function);
 #include "window_ordered.c"
 #include "window_notifications.c"
 #include "window_removal.c"
+#include "mouse_feedback.c"
 
 #define TEST_ENTRY(name) { #name, test_##name },
 #define TEST_LIST                                              \
@@ -30,7 +31,11 @@ typedef TEST_SIG(function);
     TEST_ENTRY(window_removal_refreshes_right_survivor)         \
     TEST_ENTRY(window_removal_refreshes_subtree_without_balancing) \
     TEST_ENTRY(window_removal_keeps_explicit_auto_balance)      \
-    TEST_ENTRY(window_removal_refreshes_entire_tree)
+    TEST_ENTRY(window_removal_refreshes_entire_tree)            \
+    TEST_ENTRY(mouse_up_without_window_clears_feedback)         \
+    TEST_ENTRY(mouse_up_with_invalid_window_clears_feedback)    \
+    TEST_ENTRY(mouse_drag_with_invalid_window_clears_feedback)  \
+    TEST_ENTRY(window_removal_forgets_feedback_node)
 
 static struct {
     char *name;

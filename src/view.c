@@ -2,6 +2,7 @@ extern int g_connection;
 extern struct display_manager g_display_manager;
 extern struct space_manager g_space_manager;
 extern struct window_manager g_window_manager;
+extern struct mouse_state g_mouse_state;
 
 #define INSERT_FEEDBACK_WIDTH 2
 #define INSERT_FEEDBACK_RADIUS 9
@@ -341,6 +342,7 @@ static void window_node_destroy(struct window_node *node)
         window_manager_remove_managed_window(&g_window_manager, node->window_list[i]);
     }
 
+    if (g_mouse_state.feedback_node == node) g_mouse_state.feedback_node = NULL;
     insert_feedback_destroy(node);
     free(node);
 }
@@ -713,6 +715,11 @@ struct window_node *view_remove_window_node(struct view *view, struct window *wi
 
         window_node_update(view, parent);
     }
+
+    // A drag can show its feedback on either node; the child's feedback moved
+    // to the parent above. Never leave the mouse state on a freed node.
+    if (g_mouse_state.feedback_node == child) g_mouse_state.feedback_node = child->insert_dir ? parent : NULL;
+    if (g_mouse_state.feedback_node == node)  g_mouse_state.feedback_node = NULL;
 
     insert_feedback_destroy(node);
     free(child);
